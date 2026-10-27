@@ -17,7 +17,6 @@
         }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
         
-        /* اصلاح به هم ریختگی هدر */
         header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
@@ -149,12 +148,13 @@
                     </div>
                 `;
 
-                // شرط جدید که هم مطالب جدید با ایمیل و هم مطالب قدیمی با نام را پین می‌کند
+                // اضافه شدن تمام مطالب به ستون اصلی به ترتیب زمان
+                container.innerHTML += cardHTML;
+
+                // کپی شدن مطالب مدیر در سایدبار برای پین ماندن
                 if (post.author_email === ADMIN_EMAIL || post.author_name === 'مدیر سایت') {
                     adminContainer.innerHTML += cardHTML;
                     adminPostCount++;
-                } else {
-                    container.innerHTML += cardHTML;
                 }
             });
 
