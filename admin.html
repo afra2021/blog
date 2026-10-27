@@ -68,8 +68,7 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ایمیل ادمین اصلی را اینجا بنویس:
-        const ADMIN_EMAIL = 'YOUR_ADMIN_EMAIL';
+        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
         const quill = new Quill('#editor-container', {
             theme: 'snow',
@@ -99,7 +98,7 @@
             
             currentUser = session.user;
             isAdmin = (currentUser.email === ADMIN_EMAIL);
-            currentUsername = isAdmin ? 'مدیر سایت' : (currentUser.user_metadata?.username || currentUser.email.split('@')[0]);
+            currentUsername = isAdmin ? 'مدیر سایت' : (currentUser.user_metadata?.username || 'نویسنده ناشناس');
 
             document.getElementById('user-display').innerText = `کاربر: ${currentUsername}`;
             if (isAdmin) {
@@ -118,7 +117,6 @@
             const listDiv = document.getElementById('posts-list');
             let query = _supabase.from('posts').select('*').order('created_at', { ascending: false });
 
-            // اگر کاربر عادی است فقط پست‌های خودش را ببیند
             if (!isAdmin) {
                 query = query.eq('user_id', currentUser.id);
             }

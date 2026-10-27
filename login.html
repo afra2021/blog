@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ورود / عضویت - وبلاگ</title>
+    <title>ورود به وبلاگ</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-box { background: #1e1e1e; padding: 35px; border-radius: 12px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid #2a2a2a; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #333; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; color: #888; font-weight: bold; transition: 0.2s; }
-        .tab.active { color: #00adb5; border-bottom: 2px solid #00adb5; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #2d2d2d; border: 1px solid #3f3f3f; color: white; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        button { width: 100%; padding: 12px; margin-top: 15px; background: #00adb5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.05rem; font-family: inherit; font-weight: bold; }
+        h3 { margin-top: 0; color: #fff; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #2d2d2d; border: 1px solid #3f3f3f; color: white; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        button { width: 100%; padding: 12px; margin-top: 15px; background: #00adb5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.05rem; font-family: inherit; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #008c93; }
         #msg { font-size: 0.9rem; display: none; margin-top: 12px; }
         .back-link { display: inline-block; margin-top: 20px; color: #888; text-decoration: none; font-size: 0.85rem; }
@@ -23,15 +21,12 @@
 <body>
 
     <div class="login-box">
-        <div class="tabs">
-            <div class="tab active" id="tab-login" onclick="switchMode('login')">ورود</div>
-            <div class="tab" id="tab-signup" onclick="switchMode('signup')">ثبت‌نام سریع</div>
-        </div>
+        <h3>ورود / عضویت نویسنده</h3>
+        <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">نام یا نام مستعار خود را برای انتشار مطالب بنویسید:</p>
 
-        <input type="text" id="username" placeholder="نام کاربری یا ایمیل..." required>
-        <input type="password" id="password" placeholder="رمز عبور..." required>
+        <input type="text" id="username" placeholder="نام نمایشی شما..." required>
         
-        <button id="submit-btn" onclick="handleAuth()">ورود به حساب</button>
+        <button id="submit-btn" onclick="handleAnonymousLogin()">ورود سریع به پنل</button>
         <p id="msg"></p>
 
         <a href="index.html" class="back-link">← بازگشت به صفحه اصلی</a>
@@ -42,73 +37,32 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let mode = 'login';
-
-        function switchMode(newMode) {
-            mode = newMode;
-            document.getElementById('tab-login').className = mode === 'login' ? 'tab active' : 'tab';
-            document.getElementById('tab-signup').className = mode === 'signup' ? 'tab active' : 'tab';
-            document.getElementById('submit-btn').innerText = mode === 'login' ? 'ورود به حساب' : 'ساخت اکانت و ورود';
-            document.getElementById('username').placeholder = mode === 'login' ? 'نام کاربری یا ایمیل...' : 'نام کاربری دلخواه (انگلیسی)...';
-            document.getElementById('msg').style.display = 'none';
-        }
-
-        async function handleAuth() {
-            const rawInput = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+        async function handleAnonymousLogin() {
+            const rawUser = document.getElementById('username').value.trim();
             const msg = document.getElementById('msg');
             const btn = document.getElementById('submit-btn');
 
-            if (!rawInput || !password) {
-                showMessage('لطفاً همه فیلدها را وارد کنید.', '#ff4c4c');
+            if (!rawUser) {
+                showMessage('لطفاً نام خود را وارد کنید.', '#ff4c4c');
                 return;
-            }
-
-            if (password.length < 6) {
-                showMessage('رمز عبور باید حداقل ۶ کاراکتر باشد.', '#ff4c4c');
-                return;
-            }
-
-            let email = rawInput;
-            let displayName = rawInput;
-
-            if (!rawInput.includes('@')) {
-                const cleanUser = rawInput.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                if (!cleanUser) {
-                    showMessage('نام کاربری فقط باید شامل حروف و اعداد انگلیسی باشد.', '#ff4c4c');
-                    return;
-                }
-                email = `${cleanUser}@blogapp.com`;
-                displayName = rawInput;
             }
 
             btn.disabled = true;
+            btn.innerText = 'در حال ایجاد نشست...';
             msg.style.display = 'none';
 
-            if (mode === 'login') {
-                const { error } = await _supabase.auth.signInWithPassword({ email, password });
-                
-                if (error) {
-                    showMessage('نام کاربری، ایمیل یا رمز عبور اشتباه است!', '#ff4c4c');
-                    btn.disabled = false;
-                } else {
-                    window.location.href = 'admin.html';
+            const { data, error } = await _supabase.auth.signInAnonymously({
+                options: {
+                    data: { username: rawUser }
                 }
-            } else {
-                const { error } = await _supabase.auth.signUp({
-                    email,
-                    password,
-                    options: { 
-                        data: { username: displayName } 
-                    }
-                });
+            });
 
-                if (error) {
-                    showMessage('خطا: ' + error.message, '#ff4c4c');
-                    btn.disabled = false;
-                } else {
-                    window.location.href = 'admin.html';
-                }
+            if (error) {
+                showMessage('خطا در ورود: ' + error.message, '#ff4c4c');
+                btn.disabled = false;
+                btn.innerText = 'ورود سریع به پنل';
+            } else {
+                window.location.href = 'admin.html';
             }
         }
 
