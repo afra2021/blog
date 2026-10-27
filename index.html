@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وبلاگ شخصی من</title>
+    <!-- استفاده از فونت تمیز وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+
+    <style>
+        /* این بخش کدهای استایل (CSS) است که ظاهر سایت رو مشخص می‌کنه */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Vazirmatn', sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            padding: 40px 20px;
+        }
+
+        header {
+            border-bottom: 1px solid #2d2d2d;
+            padding-bottom: 25px;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #ffffff;
+        }
+
+        header p {
+            color: #888888;
+            margin-top: 8px;
+            font-size: 1rem;
+        }
+
+        .post-card {
+            background-color: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-2px);
+            border-color: #3f3f3f;
+        }
+
+        .post-date {
+            font-size: 0.85rem;
+            color: #00adb5;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            margin: 0 0 12px 0;
+            font-size: 1.4rem;
+        }
+
+        .post-title a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .post-title a:hover {
+            color: #00adb5;
+        }
+
+        .post-desc {
+            color: #b0b0b0;
+            line-height: 1.7;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- هدر سایت: معرفی خودت -->
+        <header>
+            <h1>وبلاگ شخصی</h1>
+            <p>اینجا محلیه برای نوشتن افکار، نظرات و تجربیاتم.</p>
+        </header>
+
+        <!-- لیست پست‌ها -->
+        <main>
+            <!-- نمونه پست اول -->
+            <article class="post-card">
+                <div class="post-date">۵ بهمن ۱۴۰۳</div>
+                <h2 class="post-title"><a href="#">اولین روز وبلاگ‌نویسی</a></h2>
+                <p class="post-desc">
+                    امروز بالاخره این سایت رو راه انداختم. قراره اینجا فضایی باشه که راحت حرف‌هام رو بزنم و بقیه هم نظر بدن...
+                </p>
+            </article>
+
+            <!-- نمونه پست دوم -->
+            <article class="post-card">
+                <div class="post-date">۳ بهمن ۱۴۰۳</div>
+                <h2 class="post-title"><a href="#">چرا شروع به نوشتن کردم؟</a></h2>
+                <p class="post-desc">
+                    همیشه دوست داشتم یه گوشه از اینترنت رو داشته باشم که کاملاً مال خودم باشه بدون محدودیت شبکه‌های اجتماعی...
+                </p>
+            </article>
+        </main>
+    </div>
+
+</body>
+</html>
