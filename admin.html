@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت وبلاگ</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 0.95rem; }
+        .btn-logout { background: #cf6679; color: black; }
+        .btn-submit { background: #00adb5; color: white; width: 100%; font-size: 1.1rem; padding: 12px; }
+        .btn-delete { background: #ff4c4c; color: white; padding: 5px 10px; font-size: 0.85rem; }
+        .btn-edit { background: #f39c12; color: white; padding: 5px 10px; font-size: 0.85rem; margin-left: 5px; }
+        .form-box { background: #1e1e1e; padding: 25px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #3f3f3f; color: white; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 180px; resize: vertical; }
+        .post-item { background: #1e1e1e; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .post-title { font-size: 1.1rem; font-weight: bold; }
+        .post-date { font-size: 0.8rem; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h2>پنل مدیریت وبلاگ</h2>
+            <div>
+                <a href="index.html" style="color: #00adb5; text-decoration: none; margin-left: 15px;">مشاهده سایت</a>
+                <button class="btn btn-logout" onclick="logout()">خروج</button>
+            </div>
+        </header>
+
+        <!-- فرم ارسال یا ویرایش پست -->
+        <div class="form-box">
+            <h3 id="form-title">نوشتن پست جدید</h3>
+            <input type="hidden" id="edit-id">
+            <input type="text" id="post-title" placeholder="عنوان پست...">
+            <textarea id="post-content" placeholder="متن پست را اینجا بنویسید..."></textarea>
+            <button class="btn btn-submit" id="submit-btn" onclick="savePost()">انتشار پست</button>
+        </div>
+
+        <!-- لیست پست‌ها برای ویرایش و حذف -->
+        <h3>پست‌های منتشر شده</h3>
+        <div id="posts-list">در حال بارگذاری پست‌ها...</div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
+        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // بررسی اینکه آیا کاربر لاگین کرده یا نه
+        async function checkAuth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                // اگر لاگین نکرده بود بندازش بیرون بره صفحه ورود
+                window.location.href = 'login.html';
+            } else {
+                loadPosts();
+            }
+        }
+
+        // خروج از حساب
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'login.html';
+        }
+
+        // بارگذاری پست‌ها از دیتابیس
+        async function loadPosts() {
+            const listDiv = document.getElementById('posts-list');
+            const { data: posts, error } = await _supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                listDiv.innerHTML = 'خطا در بارگذاری پست‌ها!';
+                return;
+            }
+
+            if (!posts || posts.length === 0) {
+                listDiv.innerHTML = '<p style="color: #888;">هنوز هیچ پستی ثبت نشده است.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            posts.forEach(post => {
+                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
+                listDiv.innerHTML += `
+                    <div class="post-item">
+                        <div>
+                            <div class="post-title">${post.title}</div>
+                            <div class="post-date">${date}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-edit" onclick="startEdit(${post.id}, '${escapeHtml(post.title)}', '${escapeHtml(post.content)}')">ویرایش</button>
+                            <button class="btn btn-delete" onclick="deletePost(${post.id})">حذف</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ثبت یا ویرایش پست
+        async function savePost() {
+            const title = document.getElementById('post-title').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            const editId = document.getElementById('edit-id').value;
+
+            if (!title || !content) {
+                alert('لطفاً عنوان و متن را پر کنید.');
+                return;
+            }
+
+            if (editId) {
+                // حالت ویرایش
+                const { error } = await _supabase
+                    .from('posts')
+                    .update({ title, content })
+                    .eq('id', editId);
+
+                if (error) alert('خطا در ویرایش: ' + error.message);
+            } else {
+                // حالت پست جدید
+                const { error } = await _supabase
+                    .from('posts')
+                    .insert([{ title, content }]);
+
+                if (error) alert('خطا در ثبت: ' + error.message);
+            }
+
+            // ریست فرم
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('form-title').innerText = 'نوشتن پست جدید';
+            document.getElementById('submit-btn').innerText = 'انتشار پست';
+
+            loadPosts();
+        }
+
+        // پر کردن فیلدها برای ویرایش
+        function startEdit(id, title, content) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('post-title').value = unescapeHtml(title);
+            document.getElementById('post-content').value = unescapeHtml(content);
+            document.getElementById('form-title').innerText = 'ویرایش پست';
+            document.getElementById('submit-btn').innerText = 'بروزرسانی تغییرات';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // حذف پست
+        async function deletePost(id) {
+            if (confirm('آیا از حذف این پست مطمئن هستید؟')) {
+                const { error } = await _supabase.from('posts').delete().eq('id', id);
+                if (error) {
+                    alert('خطا در حذف: ' + error.message);
+                } else {
+                    loadPosts();
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n");
+        }
+        function unescapeHtml(text) {
+            return text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/\\n/g, "\n");
+        }
+
+        // شروع کار
+        checkAuth();
+    </script>
+</body>
+</html>
