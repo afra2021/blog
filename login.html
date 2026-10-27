@@ -69,7 +69,6 @@
                 return;
             }
 
-            // تشخیص ایمیل واقعی ادمین یا نام کاربری ساختگی کاربر
             let email = rawInput;
             let displayName = rawInput;
 
@@ -79,7 +78,7 @@
                     showMessage('نام کاربری فقط باید شامل حروف و اعداد انگلیسی باشد.', '#ff4c4c');
                     return;
                 }
-                email = `${cleanUser}@blog.local`;
+                email = `${cleanUser}@blogapp.com`;
                 displayName = rawInput;
             }
 
