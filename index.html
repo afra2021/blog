@@ -16,12 +16,14 @@
             --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(255, 255, 255, 0.95);
         }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
-        header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+        
+        /* اصلاح به هم ریختگی هدر */
+        header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
-        .actions { display: flex; align-items: center; gap: 20px; }
+        .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         
-        .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; padding: 0; }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.15); }
 
         .admin-btn {
@@ -94,14 +96,13 @@
             themeBtn.innerText = newTheme === 'dark' ? '☀️' : '🌙';
         }
 
-        // تولید رنگ اختصاصی برای هر یوزر بر اساس اسم
         function stringToColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
             let color = '#';
             for (let i = 0; i < 3; i++) {
                 let value = (hash >> (i * 8)) & 0xFF;
-                color += ('00' + Math.max(100, value).toString(16)).substr(-2); // روشن نگه داشتن رنگ‌ها
+                color += ('00' + Math.max(100, value).toString(16)).substr(-2);
             }
             return color;
         }
@@ -134,7 +135,6 @@
                 tempDiv.innerHTML = post.content;
                 let excerpt = (tempDiv.textContent || tempDiv.innerText).substring(0, 150) + '...';
 
-                // ساختار کارت که با کلیک روی هرجایش وارد پست می‌شود
                 const cardHTML = `
                     <div class="post-card ${post.author_email === ADMIN_EMAIL ? 'admin-pin' : ''}" 
                          style="animation-delay: ${index * 0.1}s; border-right: 4px solid ${userColor};" 
@@ -149,8 +149,8 @@
                     </div>
                 `;
 
-                // جدا کردن پست‌های مدیر برای سایدبار
-                if (post.author_email === ADMIN_EMAIL) {
+                // شرط جدید که هم مطالب جدید با ایمیل و هم مطالب قدیمی با نام را پین می‌کند
+                if (post.author_email === ADMIN_EMAIL || post.author_name === 'مدیر سایت') {
                     adminContainer.innerHTML += cardHTML;
                     adminPostCount++;
                 } else {

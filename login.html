@@ -42,6 +42,13 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+        // بررسی اینکه اگر کاربر از قبل لاگین هست، مستقیم برود به پنل
+        _supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                window.location.href = 'admin.html';
+            }
+        });
+
         let mode = 'login';
 
         function switchMode(newMode) {
@@ -68,7 +75,6 @@
                 return;
             }
 
-            // ترکیب خودکار با دامنه مجازی برای دور زدن سیستم ایمیل
             let email = rawUser;
             if (!rawUser.includes('@')) {
                 const cleanUser = rawUser.toLowerCase().replace(/[^a-z0-9_]/g, '');
