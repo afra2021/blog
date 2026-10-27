@@ -29,7 +29,8 @@
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // تغییر نام متغیر برای جلوگیری از ارور تداخل
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         async function login() {
             const email = document.getElementById('email').value;
@@ -38,7 +39,7 @@
             
             errorMsg.style.display = 'none';
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
             
             if (error) {
                 errorMsg.innerText = "ایمیل یا رمز اشتباه است!";
