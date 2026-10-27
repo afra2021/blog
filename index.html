@@ -3,118 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>وبلاگ شخصی من</title>
-    <!-- استفاده از فونت تمیز وزیرمتن -->
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-
+    <title>وبلاگ شخصی</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* این بخش کدهای استایل (CSS) است که ظاهر سایت رو مشخص می‌کنه */
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Vazirmatn', sans-serif;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 750px;
-            padding: 40px 20px;
-        }
-
-        header {
-            border-bottom: 1px solid #2d2d2d;
-            padding-bottom: 25px;
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 2rem;
-            color: #ffffff;
-        }
-
-        header p {
-            color: #888888;
-            margin-top: 8px;
-            font-size: 1rem;
-        }
-
-        .post-card {
-            background-color: #1e1e1e;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .post-card:hover {
-            transform: translateY(-2px);
-            border-color: #3f3f3f;
-        }
-
-        .post-date {
-            font-size: 0.85rem;
-            color: #00adb5;
-            margin-bottom: 8px;
-        }
-
-        .post-title {
-            margin: 0 0 12px 0;
-            font-size: 1.4rem;
-        }
-
-        .post-title a {
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        .post-title a:hover {
-            color: #00adb5;
-        }
-
-        .post-desc {
-            color: #b0b0b0;
-            line-height: 1.7;
-            margin: 0;
-            font-size: 0.95rem;
-        }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 700px; }
+        header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #222; padding-bottom: 20px; }
+        h1 { margin: 0 0 10px 0; color: #ffffff; }
+        header p { color: #888; margin: 0; font-size: 0.95rem; }
+        .post-card { background: #1e1e1e; padding: 25px; border-radius: 12px; margin-bottom: 20px; text-decoration: none; color: inherit; display: block; border: 1px solid #262626; transition: border-color 0.2s; }
+        .post-card:hover { border-color: #00adb5; }
+        .post-date { color: #00adb5; font-size: 0.85rem; margin-bottom: 8px; }
+        .post-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
+        .post-preview { color: #aaa; font-size: 0.95rem; line-height: 1.6; margin: 0; }
+        #loading { text-align: center; color: #666; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- هدر سایت: معرفی خودت -->
         <header>
             <h1>وبلاگ شخصی</h1>
             <p>اینجا محلیه برای نوشتن افکار، نظرات و تجربیاتم.</p>
         </header>
 
-        <!-- لیست پست‌ها -->
-        <main>
-            <!-- نمونه پست اول -->
-            <article class="post-card">
-                <div class="post-date">۵ بهمن ۱۴۰۳</div>
-                <h2 class="post-title"><a href="post.html">اولین روز وبلاگ‌نویسی</a></h2>
-                <p class="post-desc">
-                    امروز بالاخره این سایت رو راه انداختم. قراره اینجا فضایی باشه که راحت حرف‌هام رو بزنم و بقیه هم نظر بدن...
-                </p>
-            </article>
-
-            <!-- نمونه پست دوم -->
-            <article class="post-card">
-                <div class="post-date">۳ بهمن ۱۴۰۳</div>
-                <h2 class="post-title"><a href="#">چرا شروع به نوشتن کردم؟</a></h2>
-                <p class="post-desc">
-                    همیشه دوست داشتم یه گوشه از اینترنت رو داشته باشم که کاملاً مال خودم باشه بدون محدودیت شبکه‌های اجتماعی...
-                </p>
-            </article>
+        <main id="posts-container">
+            <div id="loading">در حال دریافت پست‌ها...</div>
         </main>
     </div>
 
+    <script>
+        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
+        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadFeed() {
+            const container = document.getElementById('posts-container');
+            const { data: posts, error } = await _supabase
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<p style="text-align:center; color:#cf6679;">خطا در دریافت پست‌ها!</p>';
+                return;
+            }
+
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888;">هنوز پستی منتشر نشده است.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            posts.forEach(post => {
+                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
+                const preview = post.content.length > 120 ? post.content.substring(0, 120) + '...' : post.content;
+
+                container.innerHTML += `
+                    <a href="post.html?id=${post.id}" class="post-card">
+                        <div class="post-date">${date}</div>
+                        <div class="post-title">${post.title}</div>
+                        <p class="post-preview">${preview}</p>
+                    </a>
+                `;
+            });
+        }
+
+        loadFeed();
+    </script>
 </body>
 </html>
