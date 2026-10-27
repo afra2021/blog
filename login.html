@@ -28,8 +28,8 @@
             <div class="tab" id="tab-signup" onclick="switchMode('signup')">ثبت‌نام سریع</div>
         </div>
 
-        <input type="text" id="username" placeholder="نام کاربری..." required>
-        <input type="password" id="password" placeholder="رمز عبور (حداقل ۶ کاراکتر)..." required>
+        <input type="text" id="username" placeholder="نام کاربری یا ایمیل..." required>
+        <input type="password" id="password" placeholder="رمز عبور..." required>
         
         <button id="submit-btn" onclick="handleAuth()">ورود به حساب</button>
         <p id="msg"></p>
@@ -49,17 +49,18 @@
             document.getElementById('tab-login').className = mode === 'login' ? 'tab active' : 'tab';
             document.getElementById('tab-signup').className = mode === 'signup' ? 'tab active' : 'tab';
             document.getElementById('submit-btn').innerText = mode === 'login' ? 'ورود به حساب' : 'ساخت اکانت و ورود';
+            document.getElementById('username').placeholder = mode === 'login' ? 'نام کاربری یا ایمیل...' : 'نام کاربری دلخواه (انگلیسی)...';
             document.getElementById('msg').style.display = 'none';
         }
 
         async function handleAuth() {
-            const rawUser = document.getElementById('username').value.trim();
+            const rawInput = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const msg = document.getElementById('msg');
             const btn = document.getElementById('submit-btn');
 
-            if (!rawUser || !password) {
-                showMessage('لطفاً نام کاربری و رمز را وارد کنید.', '#ff4c4c');
+            if (!rawInput || !password) {
+                showMessage('لطفاً همه فیلدها را وارد کنید.', '#ff4c4c');
                 return;
             }
 
@@ -68,34 +69,43 @@
                 return;
             }
 
+            // تشخیص ایمیل واقعی ادمین یا نام کاربری ساختگی کاربر
+            let email = rawInput;
+            let displayName = rawInput;
+
+            if (!rawInput.includes('@')) {
+                const cleanUser = rawInput.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                if (!cleanUser) {
+                    showMessage('نام کاربری فقط باید شامل حروف و اعداد انگلیسی باشد.', '#ff4c4c');
+                    return;
+                }
+                email = `${cleanUser}@blog.local`;
+                displayName = rawInput;
+            }
+
             btn.disabled = true;
             msg.style.display = 'none';
 
             if (mode === 'login') {
-                const email = `${rawUser.toLowerCase().replace(/[^a-z0-9]/g, '')}@blog.local`;
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
                 
                 if (error) {
-                    showMessage('نام کاربری یا رمز عبور اشتباه است!', '#ff4c4c');
+                    showMessage('نام کاربری، ایمیل یا رمز عبور اشتباه است!', '#ff4c4c');
                     btn.disabled = false;
                 } else {
                     window.location.href = 'admin.html';
                 }
             } else {
-                // اصلاح شده و درست:
-                const uniqueId = Math.random().toString(36).substring(2, 9);
-                const email = `user_${uniqueId}@blog.local`;
-
                 const { error } = await _supabase.auth.signUp({
                     email,
                     password,
                     options: { 
-                        data: { username: rawUser } 
+                        data: { username: displayName } 
                     }
                 });
 
                 if (error) {
-                    showMessage('خطا در ثبت‌نام: ' + error.message, '#ff4c4c');
+                    showMessage('خطا: ' + error.message, '#ff4c4c');
                     btn.disabled = false;
                 } else {
                     window.location.href = 'admin.html';
