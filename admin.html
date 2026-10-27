@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل کاربری - وبلاگ</title>
+    <title>پنل مدیریت - Real Blog</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
@@ -11,41 +11,26 @@
     <style>
         body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
-        .user-badge { background: #262626; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; color: #00adb5; margin-right: 10px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 0.95rem; }
-        .btn-logout { background: #cf6679; color: black; font-weight: bold; }
-        .btn-submit { background: #00adb5; color: white; width: 100%; font-size: 1.1rem; padding: 12px; margin-top: 15px; font-weight: bold; }
-        .btn-cancel { background: #555; color: white; width: 100%; font-size: 1rem; padding: 10px; margin-top: 8px; display: none; }
-        .btn-delete { background: #ff4c4c; color: white; padding: 5px 10px; font-size: 0.85rem; }
-        .btn-edit { background: #f39c12; color: white; padding: 5px 10px; font-size: 0.85rem; margin-left: 5px; }
-        .form-box { background: #1e1e1e; padding: 25px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #3f3f3f; color: white; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
-        
-        .ql-toolbar { background: #2d2d2d; border-color: #3f3f3f !important; border-radius: 5px 5px 0 0; direction: ltr; text-align: left; }
-        .ql-container { background: #252525; border-color: #3f3f3f !important; border-radius: 0 0 5px 5px; color: white; font-family: 'Vazirmatn', sans-serif; font-size: 1rem; min-height: 220px; }
-        .ql-editor { direction: rtl; text-align: right; min-height: 220px; line-height: 1.8; }
-        .ql-editor img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
-        .ql-snow .ql-stroke { stroke: #e0e0e0; }
-        .ql-snow .ql-fill { fill: #e0e0e0; }
-        .ql-snow .ql-picker { color: #e0e0e0; }
-        .ql-snow .ql-picker-options { background-color: #2d2d2d; }
-
-        .post-item { background: #1e1e1e; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .post-title { font-size: 1.1rem; font-weight: bold; }
-        .post-meta { font-size: 0.8rem; color: #888; margin-top: 4px; }
+        header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+        .user-badge { background: #262626; padding: 5px 12px; border-radius: 20px; color: #00adb5; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; }
+        .btn-logout { background: #cf6679; color: black; }
+        .form-box { background: #1e1e1e; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: #2d2d2d; border: 1px solid #3f3f3f; color: white; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
+        .btn-submit { background: #00adb5; color: white; width: 100%; font-size: 1.1rem; margin-top: 15px; }
+        .ql-toolbar { background: #2d2d2d; border-radius: 8px 8px 0 0; direction: ltr; border-color: #3f3f3f !important; }
+        .ql-container { background: #252525; border-radius: 0 0 8px 8px; color: white; border-color: #3f3f3f !important; min-height: 250px; }
+        .ql-editor { direction: rtl; text-align: right; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header>
+            <h2 style="margin:0;">پنل انتشار</h2>
             <div>
-                <h2 style="display:inline; margin:0;">پنل نویسندگان</h2>
                 <span id="user-display" class="user-badge">...</span>
-            </div>
-            <div>
-                <a href="index.html" style="color: #00adb5; text-decoration: none; margin-left: 15px;">صفحه اصلی سایت</a>
+                <a href="index.html" style="color:#00adb5; text-decoration:none; margin: 0 15px;">Real Blog</a>
                 <button class="btn btn-logout" onclick="logout()">خروج</button>
             </div>
         </header>
@@ -53,183 +38,64 @@
         <div class="form-box">
             <h3 id="form-title">نوشتن پست جدید</h3>
             <input type="hidden" id="edit-id">
+            
             <input type="text" id="post-title" placeholder="عنوان پست...">
+            
+            <select id="post-category" onchange="toggleCustomCategory()">
+                <option value="">یک دسته‌بندی انتخاب کنید...</option>
+                <option value="تکنولوژی">تکنولوژی</option>
+                <option value="برنامه‌نویسی">برنامه‌نویسی</option>
+                <option value="روزمره">روزمره</option>
+                <option value="آموزشی">آموزشی</option>
+                <option value="custom">سفارشی (نوشتن دسته‌بندی جدید)...</option>
+            </select>
+            <input type="text" id="custom-category" placeholder="نام دسته‌بندی خود را بنویسید..." style="display:none;">
+
             <div id="editor-container"></div>
             <button class="btn btn-submit" id="submit-btn" onclick="savePost()">انتشار پست</button>
-            <button class="btn btn-cancel" id="cancel-btn" onclick="resetForm()">انصراف از ویرایش</button>
         </div>
-
-        <h3 id="list-title">پست‌های من</h3>
-        <div id="posts-list">در حال بارگذاری پست‌ها...</div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
-        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
-        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
+        const quill = new Quill('#editor-container', { theme: 'snow', placeholder: 'متن پست...', modules: { toolbar: [['bold', 'italic'], [{'color':[]}], ['link', 'image', 'clean']] }});
+        let currentUser = null; let currentUsername = '';
 
-        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
-
-        const quill = new Quill('#editor-container', {
-            theme: 'snow',
-            placeholder: 'متن پست یا عکس‌های خود را اینجا قرار دهید...',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image', 'clean']
-                ]
-            }
-        });
-
-        let currentUser = null;
-        let currentUsername = '';
-        let isAdmin = false;
-        let allPosts = [];
+        function toggleCustomCategory() {
+            const select = document.getElementById('post-category');
+            const customInput = document.getElementById('custom-category');
+            customInput.style.display = select.value === 'custom' ? 'block' : 'none';
+        }
 
         async function checkAuth() {
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
+            if (!session) return window.location.href = 'login.html';
             currentUser = session.user;
-            isAdmin = (currentUser.email === ADMIN_EMAIL);
-            currentUsername = isAdmin ? 'مدیر سایت' : (currentUser.user_metadata?.username || 'نویسنده ناشناس');
-
-            document.getElementById('user-display').innerText = `کاربر: ${currentUsername}`;
-            if (isAdmin) {
-                document.getElementById('list-title').innerText = 'همه پست‌های سایت (مدیریت کل)';
-            }
-
-            loadPosts();
-        }
-
-        async function logout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'login.html';
-        }
-
-        async function loadPosts() {
-            const listDiv = document.getElementById('posts-list');
-            let query = _supabase.from('posts').select('*').order('created_at', { ascending: false });
-
-            if (!isAdmin) {
-                query = query.eq('user_id', currentUser.id);
-            }
-
-            const { data: posts, error } = await query;
-
-            if (error) {
-                listDiv.innerHTML = 'خطا در بارگذاری پست‌ها!';
-                return;
-            }
-
-            allPosts = posts || [];
-
-            if (allPosts.length === 0) {
-                listDiv.innerHTML = '<p style="color: #888;">هنوز هیچ پستی منتشر نکرده‌اید.</p>';
-                return;
-            }
-
-            listDiv.innerHTML = '';
-            allPosts.forEach(post => {
-                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
-                const author = post.author_name || 'کاربر';
-                listDiv.innerHTML += `
-                    <div class="post-item">
-                        <div>
-                            <div class="post-title">${escapeHtml(post.title)}</div>
-                            <div class="post-meta">نویسنده: ${escapeHtml(author)} | تاریخ: ${date}</div>
-                        </div>
-                        <div>
-                            <button class="btn btn-edit" onclick="startEdit(${post.id})">ویرایش</button>
-                            <button class="btn btn-delete" onclick="deletePost(${post.id})">حذف</button>
-                        </div>
-                    </div>
-                `;
-            });
+            currentUsername = currentUser.user_metadata?.username || 'ناشناس';
+            document.getElementById('user-display').innerText = `نویسنده: ${currentUsername}`;
         }
 
         async function savePost() {
             const title = document.getElementById('post-title').value.trim();
             const content = quill.root.innerHTML.trim();
-            const plainText = quill.getText().trim();
-            const editId = document.getElementById('edit-id').value;
+            const selectCat = document.getElementById('post-category').value;
+            const customCat = document.getElementById('custom-category').value.trim();
+            
+            const finalCategory = selectCat === 'custom' ? customCat : selectCat;
 
-            if (!title || (plainText === '' && !content.includes('<img'))) {
-                alert('لطفاً عنوان و متن پست را وارد کنید.');
-                return;
-            }
+            if (!title) return alert('عنوان الزامی است.');
+            document.getElementById('submit-btn').disabled = true;
 
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.innerText = 'در حال ذخیره...';
+            const { error } = await _supabase.from('posts').insert([{ 
+                title, content, category: finalCategory, user_id: currentUser.id, author_name: currentUsername, author_email: currentUser.email 
+            }]);
 
-            if (editId) {
-                const { error } = await _supabase
-                    .from('posts')
-                    .update({ title, content })
-                    .eq('id', editId);
-                if (error) alert('خطا در ویرایش: ' + error.message);
-            } else {
-                const { error } = await _supabase
-                    .from('posts')
-                    .insert([{ 
-                        title, 
-                        content, 
-                        user_id: currentUser.id, 
-                        author_name: currentUsername 
-                    }]);
-                if (error) alert('خطا در ثبت: ' + error.message);
-            }
-
-            btn.disabled = false;
-            resetForm();
-            loadPosts();
+            if (error) alert('خطا: ' + error.message);
+            else window.location.href = 'index.html';
+            document.getElementById('submit-btn').disabled = false;
         }
 
-        function startEdit(id) {
-            const post = allPosts.find(p => p.id === id);
-            if (!post) return;
-
-            document.getElementById('edit-id').value = post.id;
-            document.getElementById('post-title').value = post.title;
-            quill.root.innerHTML = post.content;
-            document.getElementById('form-title').innerText = 'ویرایش پست';
-            document.getElementById('submit-btn').innerText = 'بروزرسانی تغییرات';
-            document.getElementById('cancel-btn').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetForm() {
-            document.getElementById('post-title').value = '';
-            quill.root.innerHTML = '';
-            document.getElementById('edit-id').value = '';
-            document.getElementById('form-title').innerText = 'نوشتن پست جدید';
-            document.getElementById('submit-btn').innerText = 'انتشار پست';
-            document.getElementById('cancel-btn').style.display = 'none';
-        }
-
-        async function deletePost(id) {
-            if (confirm('آیا از حذف این پست مطمئن هستید؟')) {
-                const { error } = await _supabase.from('posts').delete().eq('id', id);
-                if (error) {
-                    alert('خطا در حذف: ' + error.message);
-                } else {
-                    loadPosts();
-                }
-            }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
+        async function logout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
         checkAuth();
     </script>
 </body>

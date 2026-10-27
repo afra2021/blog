@@ -3,161 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خواندن پست</title>
+    <title>خواندن مطلب - Real Blog</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
-        .header-link { color: #00adb5; text-decoration: none; margin-bottom: 20px; display: inline-block; font-size: 1.1rem; }
-        .post-box { background: #1e1e1e; padding: 30px; border-radius: 10px; margin-bottom: 30px; border: 1px solid #262626; }
-        .post-title { font-size: 1.8rem; margin: 0 0 10px 0; color: #fff; }
-        .post-date { color: #00adb5; font-size: 0.9rem; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .post-content { line-height: 1.9; font-size: 1.05rem; overflow-wrap: break-word; }
-        .post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; display: block; }
-        .post-content a { color: #00adb5; }
+        :root {
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
+            --border-color: #333; --accent-color: #00adb5;
+        }
+        [data-theme="light"] {
+            --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff;
+            --border-color: #ddd; --accent-color: #007c82;
+        }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; transition: 0.4s; }
+        .container { max-width: 800px; margin: 20px auto; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
-        .comments-section { background: #1e1e1e; padding: 30px; border-radius: 10px; border: 1px solid #262626; }
-        .comment-item { border-bottom: 1px solid #333; padding: 15px 0; }
-        .comment-item:last-child { border-bottom: none; }
-        .comment-author { font-weight: bold; color: #00adb5; margin-bottom: 5px; }
-        .comment-date { font-size: 0.8rem; color: #777; font-weight: normal; }
-        .comment-text { margin-top: 10px; white-space: pre-wrap; line-height: 1.5; }
+        .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
+        .post-meta { color: #888; font-size: 0.95rem; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; }
+        .post-content { line-height: 1.9; font-size: 1.1rem; }
+        .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
-        .comment-form { margin-top: 30px; display: flex; flex-direction: column; gap: 15px; background: #252525; padding: 20px; border-radius: 8px; }
-        input, textarea { width: 100%; padding: 12px; background: #1e1e1e; border: 1px solid #3f3f3f; color: white; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
-        textarea { height: 100px; resize: vertical; }
-        button { background: #00adb5; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-family: inherit; font-weight: bold; }
-        button:hover { background: #008c93; }
-        button:disabled { background: #555; cursor: not-allowed; }
+        .admin-controls { background: rgba(255, 76, 76, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff4c4c; margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; }
+        .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: bold; }
+        .btn-delete:hover { background: #d43f3f; }
+
+        /* بخش کامنت‌ها */
+        .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
+        .comment-box { background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; color: var(--accent-color); }
+        .comment-text { font-size: 0.95rem; line-height: 1.6; margin: 0; }
+        
+        .add-comment { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 80px; box-sizing: border-box; }
+        .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; }
+        
+        .delete-comment-btn { color: #ff4c4c; background: none; border: none; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+        .delete-comment-btn:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <a href="index.html" class="header-link">← بازگشت به صفحه اصلی</a>
+        <a href="index.html" style="color: #888; text-decoration: none; display: inline-block; margin-bottom: 20px;">← بازگشت به صفحه اصلی</a>
         
-        <div id="post-container">
-            <div style="text-align: center; color: #888; margin-top: 40px;">در حال بارگذاری پست...</div>
+        <div id="admin-panel" class="admin-controls">
+            <span style="color: #ff4c4c; font-weight: bold;">دسترسی مدیریت</span>
+            <button class="btn-delete" onclick="deleteThisPost()">حذف کامل این پست</button>
         </div>
 
-        <div class="comments-section" id="comments-wrapper" style="display: none;">
+        <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
+        <div class="post-meta">
+            <span id="p-author">✍️ ...</span>
+            <span id="p-cat">📁 ...</span>
+        </div>
+        <div class="post-content" id="p-content"></div>
+
+        <!-- بخش نظرات -->
+        <div class="comments-section">
             <h3>نظرات کاربران</h3>
             <div id="comments-list">در حال بارگذاری نظرات...</div>
-            
-            <div class="comment-form">
-                <h4 style="margin: 0 0 10px 0;">ثبت نظر جدید</h4>
-                <input type="text" id="comment-name" placeholder="نام شما..." required>
-                <textarea id="comment-text" placeholder="نظر خود را بنویسید..." required></textarea>
-                <button onclick="submitComment()" id="submit-comment-btn">ارسال نظر</button>
+
+            <div class="add-comment" id="comment-form" style="display: none;">
+                <textarea id="new-comment-text" placeholder="نظر خود را بنویسید..."></textarea>
+                <button class="btn-submit-comment" onclick="addComment()">ارسال نظر</button>
             </div>
+            <p id="login-msg" style="color: #888; font-size: 0.9rem;">برای ثبت نظر باید <a href="login.html" style="color: var(--accent-color);">وارد شوید</a>.</p>
         </div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
-        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
-        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // همگام‌سازی تم
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
 
+        const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id');
+        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
+        
+        let currentUser = null;
+        let currentUsername = '';
+        let isAdmin = false;
 
-        async function loadPost() {
-            if (!postId) {
-                document.getElementById('post-container').innerHTML = '<p style="text-align:center;">پستی یافت نشد!</p>';
-                return;
+        async function initPage() {
+            if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
+            
+            // بررسی لاگین و ادمین بودن
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                currentUsername = currentUser.user_metadata?.username || 'کاربر';
+                document.getElementById('comment-form').style.display = 'flex';
+                document.getElementById('login-msg').style.display = 'none';
+                
+                if (currentUser.email === ADMIN_EMAIL) {
+                    isAdmin = true;
+                    document.getElementById('admin-panel').style.display = 'flex';
+                }
             }
 
-            const { data: post, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
-            
-            if (error || !post) {
-                document.getElementById('post-container').innerHTML = '<p style="text-align:center; color:#cf6679;">خطا در بارگذاری پست!</p>';
-                return;
-            }
-
-            const date = new Date(post.created_at).toLocaleDateString('fa-IR');
-            document.getElementById('post-container').innerHTML = `
-                <div class="post-box">
-                    <h1 class="post-title">${escapeHtml(post.title)}</h1>
-                    <div class="post-date">منتشر شده در: ${date}</div>
-                    <div class="post-content">${post.content}</div>
-                </div>
-            `;
-            
-            document.title = post.title + ' - وبلاگ شخصی';
-            document.getElementById('comments-wrapper').style.display = 'block';
+            loadPost();
             loadComments();
         }
 
+        async function loadPost() {
+            const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
+            if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
+
+            document.getElementById('p-title').innerText = data.title;
+            document.getElementById('p-author').innerHTML = `✍️ ${data.author_name || 'ناشناس'}`;
+            document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
+            document.getElementById('p-content').innerHTML = data.content;
+        }
+
         async function loadComments() {
+            const { data: comments, error } = await _supabase.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
             const listDiv = document.getElementById('comments-list');
-            const { data: comments, error } = await _supabase
-                .from('comments')
-                .select('*')
-                .eq('post_id', postId)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                listDiv.innerHTML = '<p style="color:#cf6679;">خطا در بارگذاری نظرات!</p>';
-                return;
-            }
-
-            if (!comments || comments.length === 0) {
-                listDiv.innerHTML = '<p style="color: #888;">اولین نفری باشید که نظر می‌دهد!</p>';
-                return;
-            }
+            
+            if (error) return listDiv.innerHTML = 'خطا در دریافت نظرات.';
+            if (!comments || comments.length === 0) return listDiv.innerHTML = '<p style="color:#888; font-size:0.9rem;">هنوز نظری ثبت نشده است.</p>';
 
             listDiv.innerHTML = '';
-            comments.forEach(comment => {
-                const date = new Date(comment.created_at).toLocaleDateString('fa-IR');
+            comments.forEach(c => {
+                const date = new Date(c.created_at).toLocaleDateString('fa-IR');
+                // اگر ادمین باشد، دکمه حذف کنار کامنت ظاهر می‌شود
+                const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment(${c.id})">حذف 🗑️</button>` : '';
+                
                 listDiv.innerHTML += `
-                    <div class="comment-item">
-                        <div class="comment-author">${escapeHtml(comment.author_name)} <span class="comment-date">(${date})</span></div>
-                        <div class="comment-text">${escapeHtml(comment.content)}</div>
+                    <div class="comment-box">
+                        <div class="comment-header">
+                            <span><b>${escapeHtml(c.author_name)}</b> - ${date}</span>
+                            ${deleteBtn}
+                        </div>
+                        <p class="comment-text">${escapeHtml(c.content)}</p>
                     </div>
                 `;
             });
         }
 
-        async function submitComment() {
-            if (!postId) return;
-            
-            const nameInput = document.getElementById('comment-name');
-            const textInput = document.getElementById('comment-text');
-            const btn = document.getElementById('submit-comment-btn');
-            
-            const author_name = nameInput.value.trim();
-            const content = textInput.value.trim();
+        async function addComment() {
+            const text = document.getElementById('new-comment-text').value.trim();
+            if (!text) return alert('لطفاً متن نظر را وارد کنید.');
 
-            if (!author_name || !content) {
-                alert('لطفاً نام و متن نظر را وارد کنید.');
-                return;
-            }
+            const { error } = await _supabase.from('comments').insert([{ 
+                post_id: postId, author_name: currentUsername, content: text 
+            }]);
 
-            btn.innerText = 'در حال ارسال...';
-            btn.disabled = true;
-
-            const { error } = await _supabase
-                .from('comments')
-                .insert([{ post_id: postId, author_name, content }]);
-
-            if (error) {
-                alert('خطا در ارسال نظر!');
-            } else {
-                nameInput.value = '';
-                textInput.value = '';
+            if (error) alert('خطا در ثبت نظر: ' + error.message);
+            else {
+                document.getElementById('new-comment-text').value = '';
                 loadComments();
             }
-            
-            btn.innerText = 'ارسال نظر';
-            btn.disabled = false;
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        async function deleteThisPost() {
+            if(confirm('این مطلب برای همیشه حذف شود؟')) {
+                await _supabase.from('posts').delete().eq('id', postId);
+                window.location.href = 'index.html';
+            }
         }
 
-        loadPost();
+        async function deleteComment(commentId) {
+            if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
+                await _supabase.from('comments').delete().eq('id', commentId);
+                loadComments();
+            }
+        }
+
+        function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
+
+        initPage();
     </script>
 </body>
 </html>
