@@ -3,46 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اولین روز وبلاگ‌نویسی - وبلاگ من</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <title>خواندن پست</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 750px; padding: 40px 20px; }
-        .back-link { color: #00adb5; text-decoration: none; margin-bottom: 20px; display: inline-block; font-size: 1.1rem; }
-        .post-header { border-bottom: 1px solid #2d2d2d; padding-bottom: 20px; margin-bottom: 30px; }
-        .post-title { margin: 0 0 10px 0; color: #ffffff; font-size: 2rem; }
-        .post-date { color: #00adb5; font-size: 0.9rem; }
-        .post-content { line-height: 1.9; color: #cccccc; font-size: 1.1rem; }
-        .comments-section { margin-top: 50px; border-top: 1px dashed #3f3f3f; padding-top: 30px; }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; padding-bottom: 50px; }
+        .header-link { color: #00adb5; text-decoration: none; margin-bottom: 20px; display: inline-block; font-size: 1.1rem; }
+        .post-box { background: #1e1e1e; padding: 30px; border-radius: 10px; margin-bottom: 30px; border: 1px solid #262626; }
+        .post-title { font-size: 1.8rem; margin: 0 0 10px 0; color: #fff; }
+        .post-date { color: #00adb5; font-size: 0.9rem; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .post-content { line-height: 1.8; white-space: pre-wrap; font-size: 1.05rem; }
+        
+        .comments-section { background: #1e1e1e; padding: 30px; border-radius: 10px; border: 1px solid #262626; }
+        .comment-item { border-bottom: 1px solid #333; padding: 15px 0; }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-author { font-weight: bold; color: #00adb5; margin-bottom: 5px; }
+        .comment-date { font-size: 0.8rem; color: #777; font-weight: normal; }
+        .comment-text { margin-top: 10px; white-space: pre-wrap; line-height: 1.5; }
+        
+        .comment-form { margin-top: 30px; display: flex; flex-direction: column; gap: 15px; background: #252525; padding: 20px; border-radius: 8px; }
+        input, textarea { width: 100%; padding: 12px; background: #1e1e1e; border: 1px solid #3f3f3f; color: white; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 100px; resize: vertical; }
+        button { background: #00adb5; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-family: inherit; font-weight: bold; }
+        button:hover { background: #008c93; }
+        button:disabled { background: #555; cursor: not-allowed; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- دکمه برگشت به صفحه اصلی -->
-        <a href="index.html" class="back-link">← برگشت به صفحه اصلی</a>
+        <a href="index.html" class="header-link">← بازگشت به صفحه اصلی</a>
         
-        <div class="post-header">
-            <h1 class="post-title">اولین روز وبلاگ‌نویسی</h1>
-            <div class="post-date">۵ بهمن ۱۴۰۳</div>
+        <!-- بخش نمایش متن پست -->
+        <div id="post-container">
+            <div style="text-align: center; color: #888; margin-top: 40px;">در حال بارگذاری پست...</div>
         </div>
 
-        <div class="post-content">
-            <p>سلام!</p>
-            <p>این اولین پست وبلاگ منه. خیلی خوشحالم که بالاخره تونستم یه سایت شخصی برای خودم بسازم تا حرف‌هام رو اینجا بنویسم.</p>
-            <p>اگر این پست رو می‌خونی، می‌تونی نظرت رو تو بخش پایین برام بنویسی!</p>
-        </div>
-
-        <!-- بخش کامنت‌ها -->
-        <div class="comments-section">
-            <h3>نظرات شما</h3>
-            <script src="https://utteranc.es/client.js"
-                    repo="afra2021/blog"
-                    issue-term="pathname"
-                    theme="github-dark"
-                    crossorigin="anonymous"
-                    async>
-            </script>
+        <!-- بخش نظرات -->
+        <div class="comments-section" id="comments-wrapper" style="display: none;">
+            <h3>نظرات کاربران</h3>
+            <div id="comments-list">در حال بارگذاری نظرات...</div>
+            
+            <div class="comment-form">
+                <h4 style="margin: 0 0 10px 0;">ثبت نظر جدید</h4>
+                <input type="text" id="comment-name" placeholder="نام شما..." required>
+                <textarea id="comment-text" placeholder="نظر خود را بنویسید..." required></textarea>
+                <button onclick="submitComment()" id="submit-comment-btn">ارسال نظر</button>
+            </div>
         </div>
     </div>
+
+    <script>
+        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
+        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // خواندن آیدی پست از آدرس مرورگر
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+
+        async function loadPost() {
+            if (!postId) {
+                document.getElementById('post-container').innerHTML = '<p style="text-align:center;">پستی یافت نشد!</p>';
+                return;
+            }
+
+            const { data: post, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
+            
+            if (error || !post) {
+                document.getElementById('post-container').innerHTML = '<p style="text-align:center; color:#cf6679;">خطا در بارگذاری پست!</p>';
+                return;
+            }
+
+            const date = new Date(post.created_at).toLocaleDateString('fa-IR');
+            document.getElementById('post-container').innerHTML = `
+                <div class="post-box">
+                    <h1 class="post-title">${escapeHtml(post.title)}</h1>
+                    <div class="post-date">منتشر شده در: ${date}</div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                </div>
+            `;
+            
+            document.title = post.title + ' - وبلاگ شخصی';
+            document.getElementById('comments-wrapper').style.display = 'block';
+            loadComments();
+        }
+
+        async function loadComments() {
+            const listDiv = document.getElementById('comments-list');
+            const { data: comments, error } = await _supabase
+                .from('comments')
+                .select('*')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                listDiv.innerHTML = '<p style="color:#cf6679;">خطا در بارگذاری نظرات!</p>';
+                return;
+            }
+
+            if (!comments || comments.length === 0) {
+                listDiv.innerHTML = '<p style="color: #888;">اولین نفری باشید که نظر می‌دهد!</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            comments.forEach(comment => {
+                const date = new Date(comment.created_at).toLocaleDateString('fa-IR');
+                listDiv.innerHTML += `
+                    <div class="comment-item">
+                        <div class="comment-author">${escapeHtml(comment.author_name)} <span class="comment-date">(${date})</span></div>
+                        <div class="comment-text">${escapeHtml(comment.content)}</div>
+                    </div>
+                `;
+            });
+        }
+
+        async function submitComment() {
+            if (!postId) return;
+            
+            const nameInput = document.getElementById('comment-name');
+            const textInput = document.getElementById('comment-text');
+            const btn = document.getElementById('submit-comment-btn');
+            
+            const author_name = nameInput.value.trim();
+            const content = textInput.value.trim();
+
+            if (!author_name || !content) {
+                alert('لطفاً نام و متن نظر را وارد کنید.');
+                return;
+            }
+
+            btn.innerText = 'در حال ارسال...';
+            btn.disabled = true;
+
+            const { error } = await _supabase
+                .from('comments')
+                .insert([{ post_id: postId, author_name, content }]);
+
+            if (error) {
+                alert('خطا در ارسال نظر!');
+            } else {
+                nameInput.value = '';
+                textInput.value = '';
+                loadComments(); // رفرش کردن لیست نظرات
+            }
+            
+            btn.innerText = 'ارسال نظر';
+            btn.disabled = false;
+        }
+
+        // جلوگیری از کدهای مخرب HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        loadPost();
+    </script>
 </body>
 </html>
