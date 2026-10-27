@@ -28,7 +28,7 @@
             <div class="tab" id="tab-signup" onclick="switchMode('signup')">ثبت‌نام سریع</div>
         </div>
 
-        <input type="text" id="username" placeholder="نام کاربری (انگلیسی)..." required>
+        <input type="text" id="username" placeholder="نام کاربری..." required>
         <input type="password" id="password" placeholder="رمز عبور (حداقل ۶ کاراکتر)..." required>
         
         <button id="submit-btn" onclick="handleAuth()">ورود به حساب</button>
@@ -53,7 +53,7 @@
         }
 
         async function handleAuth() {
-            const rawUser = document.getElementById('username').value.trim().toLowerCase();
+            const rawUser = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const msg = document.getElementById('msg');
             const btn = document.getElementById('submit-btn');
@@ -68,15 +68,13 @@
                 return;
             }
 
-            // اگر کاربر ایمیل کامل وارد نکرده بود، به فرمت ایمیل داخلی تبدیلش کن
-            const email = rawUser.includes('@') ? rawUser : `${rawUser}@blog.local`;
-            const displayUsername = rawUser.includes('@') ? rawUser.split('@')[0] : rawUser;
-
             btn.disabled = true;
             msg.style.display = 'none';
 
             if (mode === 'login') {
+                const email = `${rawUser.toLowerCase().replace(/[^a-z0-9]/g, '')}@blog.local`;
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
+                
                 if (error) {
                     showMessage('نام کاربری یا رمز عبور اشتباه است!', '#ff4c4c');
                     btn.disabled = false;
@@ -84,14 +82,20 @@
                     window.location.href = 'admin.html';
                 }
             } else {
+                // اصلاح شده و درست:
+                const uniqueId = Math.random().toString(36).substring(2, 9);
+                const email = `user_${uniqueId}@blog.local`;
+
                 const { error } = await _supabase.auth.signUp({
                     email,
                     password,
-                    options: { data: { username: displayUsername } }
+                    options: { 
+                        data: { username: rawUser } 
+                    }
                 });
 
                 if (error) {
-                    showMessage('این نام کاربری قبلاً گرفته شده یا نامعتبر است!', '#ff4c4c');
+                    showMessage('خطا در ثبت‌نام: ' + error.message, '#ff4c4c');
                     btn.disabled = false;
                 } else {
                     window.location.href = 'admin.html';
