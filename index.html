@@ -3,107 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>وبلاگ و انجمن</title>
+    <title>وبلاگ Sector 17</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 30px 20px; display: flex; justify-content: center; min-height: 90vh; }
-        .container { width: 100%; max-width: 700px; display: flex; flex-direction: column; justify-content: space-between; }
-        .top-bar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-        .auth-btn { background: #1e1e1e; color: #00adb5; border: 1px solid #00adb5; padding: 7px 15px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: bold; transition: 0.2s; }
-        .auth-btn:hover { background: #00adb5; color: #fff; }
-        header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #222; padding-bottom: 20px; }
-        h1 { margin: 0 0 10px 0; color: #ffffff; }
-        header p { color: #888; margin: 0; font-size: 0.95rem; }
-        .post-card { background: #1e1e1e; padding: 25px; border-radius: 12px; margin-bottom: 20px; text-decoration: none; color: inherit; display: block; border: 1px solid #262626; transition: border-color 0.2s; }
-        .post-card:hover { border-color: #00adb5; }
-        .post-meta { color: #00adb5; font-size: 0.85rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
-        .post-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
-        .post-preview { color: #aaa; font-size: 0.95rem; line-height: 1.6; margin: 0; }
-        #loading { text-align: center; color: #666; }
-        footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #1a1a1a; color: #444; font-size: 0.8rem; }
-        .secret-link { color: #444; text-decoration: none; cursor: default; }
+        /* متغیرهای تم تاریک (پیش‌فرض) */
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --accent-color: #00adb5;
+            --header-bg: rgba(26, 26, 26, 0.95);
+        }
+
+        /* متغیرهای تم روشن */
+        [data-theme="light"] {
+            --bg-color: #f4f4f9;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --border-color: #dddddd;
+            --accent-color: #007c82;
+            --header-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Vazirmatn', sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            transition: background-color 0.4s, border-color 0.4s;
+        }
+
+        .header-title { font-size: 1.4rem; font-weight: bold; color: var(--accent-color); text-decoration: none; letter-spacing: 1px; }
+        
+        .actions { display: flex; align-items: center; gap: 20px; }
+        
+        .theme-toggle {
+            background: none; border: none; font-size: 1.4rem; cursor: pointer;
+            color: var(--text-color); transition: transform 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .theme-toggle:hover { transform: rotate(15deg) scale(1.1); }
+
+        .admin-link {
+            color: var(--text-color); text-decoration: none; font-size: 0.9rem;
+            opacity: 0.3; transition: opacity 0.3s, color 0.3s;
+        }
+        header:hover .admin-link { opacity: 0.8; }
+        .admin-link:hover { opacity: 1 !important; color: var(--accent-color); }
+
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+
+        /* انیمیشن لود شدن پست‌ها */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.4s, border-color 0.4s;
+            
+            /* مخفی بودن پیش‌فرض برای اجرای انیمیشن */
+            opacity: 0; 
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-color: var(--accent-color);
+        }
+
+        .post-title { margin: 0 0 10px 0; }
+        .post-title a { color: var(--accent-color); text-decoration: none; font-size: 1.5rem; transition: color 0.2s; }
+        .post-title a:hover { color: var(--text-color); }
+
+        .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; }
+        .post-excerpt { line-height: 1.8; font-size: 1rem; color: var(--text-color); opacity: 0.9; }
+        
+        #loading { text-align: center; color: #888; margin-top: 50px; font-size: 1.1rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div>
-            <div class="top-bar">
-                <a href="admin.html" id="nav-auth-btn" class="auth-btn">ورود / ثبت‌نام</a>
-            </div>
-            <header>
-                <h1>وبلاگ شخصی و کامیونیتی</h1>
-                <p>محلی برای اشتراک‌گذاری افکار، تجربیات و نوشته‌های شما.</p>
-            </header>
-
-            <main id="posts-container">
-                <div id="loading">در حال دریافت پست‌ها...</div>
-            </main>
+    <header>
+        <a href="index.html" class="header-title">وبلاگ Sector 17</a>
+        <div class="actions">
+            <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="تغییر تم">☀️</button>
+            <a href="login.html" class="admin-link">پنل نویسندگان</a>
         </div>
+    </header>
 
-        <footer>
-            تمامی حقوق محفوظ است <a href="admin.html" class="secret-link">©</a> ۲۰۲۶
-        </footer>
+    <div class="container">
+        <div id="loading">در حال دریافت مطالب...</div>
+        <div id="posts-container"></div>
     </div>
 
     <script>
+        // --- بخش مدیریت تم (تاریک/روشن) ---
+        const themeBtn = document.getElementById('theme-btn');
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            themeBtn.innerText = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // --- اتصال به دیتابیس و دریافت پست‌ها ---
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function checkUserStatus() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                document.getElementById('nav-auth-btn').innerText = 'پنل کاربری / نوشتن پست +';
-            }
-        }
-
-        function stripHtml(html) {
-            const tmp = document.createElement("DIV");
-            tmp.innerHTML = html;
-            return tmp.textContent || tmp.innerText || "";
-        }
-
-        async function loadFeed() {
-            const container = document.getElementById('posts-container');
+        async function loadPosts() {
             const { data: posts, error } = await _supabase
                 .from('posts')
                 .select('*')
                 .order('created_at', { ascending: false });
 
+            const container = document.getElementById('posts-container');
+            const loading = document.getElementById('loading');
+
             if (error) {
-                container.innerHTML = '<p style="text-align:center; color:#cf6679;">خطا در دریافت پست‌ها!</p>';
+                loading.innerText = 'خطا در برقراری ارتباط با سرور.';
                 return;
             }
 
             if (!posts || posts.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#888;">هنوز پستی منتشر نشده است.</p>';
+                loading.innerText = 'هنوز هیچ پستی منتشر نشده است.';
                 return;
             }
 
+            loading.style.display = 'none';
             container.innerHTML = '';
-            posts.forEach(post => {
-                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
-                const author = post.author_name || 'مدیر سایت';
-                const cleanText = stripHtml(post.content);
-                const preview = cleanText.length > 120 ? cleanText.substring(0, 120) + '...' : (cleanText || 'مشاهده تصویر و مطلب...');
+
+            posts.forEach((post, index) => {
+                // تبدیل تاریخ به شمسی خوانا
+                const date = new Date(post.created_at).toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
+                const author = post.author_name || 'ناشناس';
+                
+                // استخراج بخشی از متن برای پیش‌نمایش
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = post.content;
+                let excerpt = tempDiv.textContent || tempDiv.innerText || "";
+                excerpt = excerpt.length > 200 ? excerpt.substring(0, 200) + '...' : excerpt;
+
+                // تاخیر پله‌ای برای اجرای انیمیشن (هر پست ۰.۱۵ ثانیه دیرتر)
+                const delay = index * 0.15;
 
                 container.innerHTML += `
-                    <a href="post.html?id=${post.id}" class="post-card">
+                    <div class="post-card" style="animation-delay: ${delay}s">
+                        <h2 class="post-title"><a href="post.html?id=${post.id}">${escapeHtml(post.title)}</a></h2>
                         <div class="post-meta">
-                            <span>نویسنده: ${author}</span>
-                            <span>${date}</span>
+                            <span>✍️ ${escapeHtml(author)}</span>
+                            <span>📅 ${date}</span>
                         </div>
-                        <div class="post-title">${post.title}</div>
-                        <p class="post-preview">${preview}</p>
-                    </a>
+                        <div class="post-excerpt">${excerpt}</div>
+                    </div>
                 `;
             });
         }
 
-        checkUserStatus();
-        loadFeed();
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        loadPosts();
     </script>
 </body>
 </html>
