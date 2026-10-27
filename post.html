@@ -13,7 +13,9 @@
         .post-box { background: #1e1e1e; padding: 30px; border-radius: 10px; margin-bottom: 30px; border: 1px solid #262626; }
         .post-title { font-size: 1.8rem; margin: 0 0 10px 0; color: #fff; }
         .post-date { color: #00adb5; font-size: 0.9rem; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .post-content { line-height: 1.8; white-space: pre-wrap; font-size: 1.05rem; }
+        .post-content { line-height: 1.9; font-size: 1.05rem; overflow-wrap: break-word; }
+        .post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; display: block; }
+        .post-content a { color: #00adb5; }
         
         .comments-section { background: #1e1e1e; padding: 30px; border-radius: 10px; border: 1px solid #262626; }
         .comment-item { border-bottom: 1px solid #333; padding: 15px 0; }
@@ -34,12 +36,10 @@
     <div class="container">
         <a href="index.html" class="header-link">← بازگشت به صفحه اصلی</a>
         
-        <!-- بخش نمایش متن پست -->
         <div id="post-container">
             <div style="text-align: center; color: #888; margin-top: 40px;">در حال بارگذاری پست...</div>
         </div>
 
-        <!-- بخش نظرات -->
         <div class="comments-section" id="comments-wrapper" style="display: none;">
             <h3>نظرات کاربران</h3>
             <div id="comments-list">در حال بارگذاری نظرات...</div>
@@ -58,7 +58,6 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // خواندن آیدی پست از آدرس مرورگر
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id');
 
@@ -80,7 +79,7 @@
                 <div class="post-box">
                     <h1 class="post-title">${escapeHtml(post.title)}</h1>
                     <div class="post-date">منتشر شده در: ${date}</div>
-                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    <div class="post-content">${post.content}</div>
                 </div>
             `;
             
@@ -146,14 +145,13 @@
             } else {
                 nameInput.value = '';
                 textInput.value = '';
-                loadComments(); // رفرش کردن لیست نظرات
+                loadComments();
             }
             
             btn.innerText = 'ارسال نظر';
             btn.disabled = false;
         }
 
-        // جلوگیری از کدهای مخرب HTML
         function escapeHtml(text) {
             if (!text) return '';
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");

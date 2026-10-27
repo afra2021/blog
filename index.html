@@ -7,8 +7,8 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 700px; }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 40px 20px; display: flex; justify-content: center; min-height: 90vh; }
+        .container { width: 100%; max-width: 700px; display: flex; flex-direction: column; justify-content: space-between; }
         header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #222; padding-bottom: 20px; }
         h1 { margin: 0 0 10px 0; color: #ffffff; }
         header p { color: #888; margin: 0; font-size: 0.95rem; }
@@ -18,25 +18,41 @@
         .post-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; color: #fff; }
         .post-preview { color: #aaa; font-size: 0.95rem; line-height: 1.6; margin: 0; }
         #loading { text-align: center; color: #666; }
+        
+        /* استایل فوتر و دکمه مخفی مدیریت */
+        footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #1a1a1a; color: #444; font-size: 0.8rem; }
+        .secret-link { color: #444; text-decoration: none; cursor: default; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <h1>وبلاگ شخصی</h1>
-            <p>اینجا محلیه برای نوشتن افکار، نظرات و تجربیاتم.</p>
-        </header>
+        <div>
+            <header>
+                <h1>وبلاگ شخصی</h1>
+                <p>اینجا محلیه برای نوشتن افکار، نظرات و تجربیاتم.</p>
+            </header>
 
-        <main id="posts-container">
-            <div id="loading">در حال دریافت پست‌ها...</div>
-        </main>
+            <main id="posts-container">
+                <div id="loading">در حال دریافت پست‌ها...</div>
+            </main>
+        </div>
+
+        <footer>
+            تمامی حقوق محفوظ است <a href="admin.html" class="secret-link">©</a> ۲۰۲۶
+        </footer>
     </div>
 
     <script>
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        function stripHtml(html) {
+            const tmp = document.createElement("DIV");
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || "";
+        }
 
         async function loadFeed() {
             const container = document.getElementById('posts-container');
@@ -58,7 +74,8 @@
             container.innerHTML = '';
             posts.forEach(post => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
-                const preview = post.content.length > 120 ? post.content.substring(0, 120) + '...' : post.content;
+                const cleanText = stripHtml(post.content);
+                const preview = cleanText.length > 120 ? cleanText.substring(0, 120) + '...' : (cleanText || 'مشاهده تصویر و مطلب...');
 
                 container.innerHTML += `
                     <a href="post.html?id=${post.id}" class="post-card">
