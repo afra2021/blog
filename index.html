@@ -7,16 +7,16 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(26, 26, 26, 0.95); }
-        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(255, 255, 255, 0.95); }
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(18, 18, 18, 0.7); }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(244, 244, 249, 0.7); }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
         
-        header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+        /* استایل شیشه‌ای هدر */
+        header { background: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .header-left { display: flex; align-items: center; gap: 20px; }
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
         
-        /* استایل اصلاح‌شده برای ساعت و تاریخ */
         .live-clock { font-size: 0.9rem; color: var(--accent-color); background: var(--card-bg); padding: 6px 15px; border-radius: 15px; border: 1px solid var(--border-color); direction: rtl; font-family: 'Vazirmatn', sans-serif; font-weight: bold; }
         
         .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
@@ -30,24 +30,34 @@
 
         .main-layout { display: flex; gap: 30px; max-width: 1100px; margin: 40px auto; padding: 0 20px; align-items: flex-start; }
         .sidebar { width: 30%; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); position: sticky; top: 90px; }
-        .sidebar h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        .sidebar h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-bottom: 15px; }
         .content { width: 70%; }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .post-card { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.5s ease forwards; transition: transform 0.3s, border-color 0.3s; }
-        .post-card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
+        /* سایدبار مطالب محبوب (مینیمال) */
+        .minimal-post { padding: 12px 0; border-bottom: 1px dashed var(--border-color); cursor: pointer; transition: 0.3s; }
+        .minimal-post:last-child { border-bottom: none; }
+        .minimal-post:hover { transform: translateX(-5px); color: var(--accent-color); }
+        .minimal-post h4 { margin: 0 0 5px 0; font-size: 0.95rem; }
+        .min-meta { font-size: 0.8rem; color: #888; display: flex; gap: 10px; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* افکت‌های ظریف هاور برای کارت‌ها */
+        .post-card { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease; }
+        .post-card:hover { transform: translateY(-6px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
         .post-card-content { cursor: pointer; }
         
         .category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: #333; color: white; margin-bottom: 10px; }
         .post-title { margin: 0 0 10px 0; font-size: 1.5rem; color: var(--accent-color); }
-        .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; z-index: 2; position: relative; }
         
+        .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; z-index: 2; position: relative; }
         .author-info { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; padding: 4px 10px; border-radius: 20px; transition: 0.3s; }
         .author-info:hover { background: rgba(0, 173, 181, 0.1); color: var(--accent-color); }
         .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; object-fit: cover; }
         
+        .stat-icons { display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 15px; }
+        
         .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
-        .like-count { display: flex; align-items: center; gap: 5px; color: #ff4c4c; font-weight: bold; }
         
         #loading { text-align: center; color: #888; font-size: 1.1rem; }
         #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
@@ -72,8 +82,8 @@
 
     <div class="main-layout">
         <aside class="sidebar">
-            <h3>📌 مطالب مدیر سایت</h3>
-            <div id="admin-posts">در حال دریافت...</div>
+            <h3>🔥 محبوب‌ترین مطالب</h3>
+            <div id="popular-posts">در حال دریافت...</div>
         </aside>
 
         <main class="content">
@@ -85,7 +95,6 @@
     <button id="scroll-top-btn" onclick="scrollToTop()">↑</button>
 
     <script>
-        // کد اصلاح‌شده جاوا اسکریپت برای ساعت و تاریخ
         function updateClock() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -125,7 +134,6 @@
             if (session) {
                 let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username;
                 if (!name) name = session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : session.user.email.split('@')[0];
-                
                 let avatar = session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
                 authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
             }
@@ -134,14 +142,22 @@
 
         async function loadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
+            // دریافت کامنت‌ها برای محاسبه تعداد نظرات هر پست
+            const { data: commentsData } = await _supabase.from('comments').select('post_id');
+            
             const container = document.getElementById('posts-container');
-            const adminContainer = document.getElementById('admin-posts');
+            const popularContainer = document.getElementById('popular-posts');
             const loading = document.getElementById('loading');
 
             if (error || !posts) return loading.innerText = 'خطا در دریافت مطالب.';
             loading.style.display = 'none';
-            container.innerHTML = ''; adminContainer.innerHTML = '';
-            let adminPostCount = 0;
+            container.innerHTML = ''; 
+
+            // شمارش نظرات
+            let commentCounts = {};
+            if (commentsData) {
+                commentsData.forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
+            }
 
             posts.forEach((post, index) => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
@@ -149,20 +165,32 @@
                 const avatarUrl = post.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
                 const likes = post.likes || 0;
+                const views = post.views || 0;
+                const comments = commentCounts[post.id] || 0;
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
-                let excerpt = (tempDiv.textContent || tempDiv.innerText).substring(0, 150) + '...';
+                let textContent = tempDiv.textContent || tempDiv.innerText;
+                let excerpt = textContent.substring(0, 150) + '...';
+                
+                // محاسبه زمان مطالعه
+                const wordCount = textContent.trim().split(/\s+/).length;
+                const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
                 const cardHTML = `
-                    <div class="post-card ${post.author_email === ADMIN_EMAIL ? 'admin-pin' : ''}" style="animation-delay: ${index * 0.1}s;">
+                    <div class="post-card" style="animation-delay: ${index * 0.05}s;">
                         <div class="post-meta">
                             <a href="author.html?id=${post.user_id}" class="author-info">
                                 <img src="${avatarUrl}" class="post-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> 
                                 ${escapeHtml(author)}
                             </a>
                             <span>📅 ${date}</span>
-                            <span class="like-count">❤️ ${likes}</span>
+                            <span style="color:var(--accent-color);">⏱️ ${readTime} دقیقه</span>
+                            <div class="stat-icons">
+                                <span>❤️ ${likes}</span>
+                                <span>👁️ ${views}</span>
+                                <span>💬 ${comments}</span>
+                            </div>
                         </div>
                         <div class="post-card-content" onclick="window.location.href='post.html?id=${post.id}'">
                             ${category}
@@ -171,15 +199,21 @@
                         </div>
                     </div>
                 `;
-
                 container.innerHTML += cardHTML;
-                if (post.author_email === ADMIN_EMAIL || post.author_name === 'مدیر سایت') {
-                    adminContainer.innerHTML += cardHTML;
-                    adminPostCount++;
-                }
             });
 
-            if(adminPostCount === 0) adminContainer.innerHTML = '<p style="font-size:0.85rem; color:#888;">مطلبی از مدیر وجود ندارد.</p>';
+            // ساخت سایدبار مطالب محبوب
+            const popularPosts = [...posts].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+            popularContainer.innerHTML = '';
+            popularPosts.forEach(p => {
+                popularContainer.innerHTML += `
+                    <div class="minimal-post" onclick="window.location.href='post.html?id=${p.id}'">
+                        <h4>${escapeHtml(p.title)}</h4>
+                        <div class="min-meta"><span>❤️ ${p.likes || 0}</span> | <span>👁️ ${p.views || 0}</span></div>
+                    </div>
+                `;
+            });
+            if (popularPosts.length === 0) popularContainer.innerHTML = '<p style="font-size:0.85rem; color:#888;">مطلبی یافت نشد.</p>';
         }
 
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
