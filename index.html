@@ -104,10 +104,9 @@
         };
         function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
-        // وقتی با دکمه بک مرورگر برمی‌گردیم، اطلاعات جدید را لود کند تا بازدیدها سینک شوند
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) { loadPosts(); }
-        });
+        // اطمینان از آپدیت شدن لیست به محض بازگشت به این صفحه
+        window.addEventListener('pageshow', function() { loadPosts(); });
+        window.addEventListener('focus', function() { loadPosts(); });
 
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
