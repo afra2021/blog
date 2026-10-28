@@ -11,10 +11,8 @@
         [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s; padding-bottom: 50px; }
         
-        /* نوار پیشرفت مطالعه */
         #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: var(--accent-color); z-index: 1001; width: 0%; transition: width 0.1s; }
         
-        /* منوی چسبان نویسنده (بالای صفحه حین اسکرول) */
         .sticky-author-bar { position: fixed; top: -70px; left: 0; width: 100%; background: rgba(30,30,30,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; box-sizing: border-box; z-index: 999; transition: top 0.3s; }
         .sticky-author-bar.visible { top: 0; }
         .sticky-author { display: flex; align-items: center; gap: 10px; font-weight: bold; }
@@ -22,7 +20,6 @@
         .sticky-title { font-size: 0.9rem; color: #888; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
         
         .container { max-width: 800px; margin: 50px auto 20px; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        
         .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
         
         .post-meta-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
@@ -33,7 +30,6 @@
         
         .stats-badge { background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
         
-        /* انیمیشن پاپ لایک */
         @keyframes heartBurst { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
         
         .like-btn { background: rgba(255, 76, 76, 0.1); color: #ff4c4c; border: 1px solid #ff4c4c; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
@@ -116,22 +112,17 @@
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         
-        // محاسبه نوار پیشرفت و نوار چسبان
         window.onscroll = function() {
             let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
             let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             let scrolled = (winScroll / height) * 100;
             document.getElementById("progress-bar").style.width = scrolled + "%";
             
-            // منطق منوی چسبان
             const metaContainer = document.getElementById('main-meta-container');
             const stickyBar = document.getElementById('sticky-bar');
             if(metaContainer) {
-                if(winScroll > metaContainer.offsetTop + 100) {
-                    stickyBar.classList.add('visible');
-                } else {
-                    stickyBar.classList.remove('visible');
-                }
+                if(winScroll > metaContainer.offsetTop + 100) stickyBar.classList.add('visible');
+                else stickyBar.classList.remove('visible');
             }
         };
 
@@ -141,7 +132,13 @@
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
         
         let currentUser = null; let currentUsername = ''; let currentAvatar = '';
-        let isAdmin = false; let currentLikes = 0; let hasLiked = false;
+        let isAdmin = false; 
+        
+        // متغیرهای ذخیره وضعیت لایک و لیست کاربران
+        let currentLikes = 0; 
+        let hasLiked = false;
+        let likedUsersArray = [];
+        let viewedUsersArray = [];
 
         async function initPage() {
             if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
@@ -166,13 +163,26 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
-            // آپدیت بازدیدها
-            const newViews = (data.views || 0) + 1;
-            await _supabase.from('posts').update({ views: newViews }).eq('id', postId);
+            // پردازش لیست بازدیدکنندگان و لایک‌کنندگان
+            viewedUsersArray = data.viewed_users ? data.viewed_users.split(',') : [];
+            likedUsersArray = data.liked_users ? data.liked_users.split(',') : [];
+            let newViews = data.views || 0;
+
+            // اگر کاربر لاگین است و قبلاً این پست را ندیده، بازدید یکتا ثبت می‌شود
+            if (currentUser && !viewedUsersArray.includes(currentUser.id)) {
+                viewedUsersArray.push(currentUser.id);
+                newViews++;
+                await _supabase.from('posts').update({ 
+                    views: newViews, 
+                    viewed_users: viewedUsersArray.join(',') 
+                }).eq('id', postId);
+            }
 
             const author = data.author_name || 'ناشناس';
             const avatarUrl = data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+            
             currentLikes = data.likes || 0;
+            hasLiked = currentUser && likedUsersArray.includes(currentUser.id);
 
             document.getElementById('p-title').innerText = data.title;
             document.getElementById('sticky-title').innerText = data.title;
@@ -182,16 +192,17 @@
             document.getElementById('p-author').href = `author.html?id=${data.user_id}`;
             document.getElementById('sticky-author-info').innerHTML = authorHTML;
             
-            // محاسبه زمان مطالعه
             let tempDiv = document.createElement('div');
             tempDiv.innerHTML = data.content;
-            const wordCount = (tempDiv.textContent || tempDiv.innerText).trim().split(/\s+/).length;
-            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+            let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
+            const wordCount = textContent.split(' ').length;
+            const readTime = Math.ceil(wordCount / 200);
+            const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
-            document.getElementById('p-readtime').innerText = `⏱️ ${readTime} دقیقه`;
+            document.getElementById('p-readtime').innerText = `⏱️ ${readTimeDisplay}`;
             document.getElementById('p-views').innerText = `👁️ ${newViews}`;
-            
             document.getElementById('p-content').innerHTML = data.content;
+            
             updateLikeUI();
 
             if (currentUser && (isAdmin || currentUser.id === data.user_id)) {
@@ -212,15 +223,31 @@
         }
 
         async function toggleLike() {
-            if (hasLiked) { currentLikes--; hasLiked = false; } 
-            else { currentLikes++; hasLiked = true; }
+            if (!currentUser) return alert('برای لایک کردن باید وارد سایت شوید.');
+
+            if (hasLiked) { 
+                currentLikes--; 
+                likedUsersArray = likedUsersArray.filter(id => id !== currentUser.id);
+                hasLiked = false; 
+            } else { 
+                currentLikes++; 
+                likedUsersArray.push(currentUser.id);
+                hasLiked = true; 
+            }
             updateLikeUI();
             
-            const { error } = await _supabase.from('posts').update({ likes: currentLikes }).eq('id', postId);
+            // آپدیت تعداد لایک و لیست افراد لایک‌کننده در دیتابیس
+            const { error } = await _supabase.from('posts').update({ 
+                likes: currentLikes,
+                liked_users: likedUsersArray.join(',')
+            }).eq('id', postId);
+            
             if (error) {
-                if (hasLiked) { currentLikes--; hasLiked = false; } else { currentLikes++; hasLiked = true; }
+                // برگشت به حالت قبل در صورت خطا
+                if (hasLiked) { currentLikes--; hasLiked = false; likedUsersArray.pop(); } 
+                else { currentLikes++; hasLiked = true; likedUsersArray.push(currentUser.id); }
                 updateLikeUI();
-                alert('خطا در ثبت تغییرات لایک');
+                alert('خطا در ثبت لایک');
             }
         }
 
@@ -230,7 +257,6 @@
             const countDisplay = document.getElementById('comment-count-display');
             
             if (error) return listDiv.innerHTML = 'خطا در دریافت نظرات.';
-            
             countDisplay.innerText = `(${comments ? comments.length : 0})`;
             
             if (!comments || comments.length === 0) return listDiv.innerHTML = '<p style="color:#888; font-size:0.9rem;">هنوز نظری ثبت نشده است.</p>';
@@ -267,8 +293,7 @@
 
         async function deleteComment(commentId) {
             if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
-                await _supabase.from('comments').delete().eq('id', commentId);
-                loadComments();
+                await _supabase.from('comments').delete().eq('id', commentId); loadComments();
             }
         }
 
