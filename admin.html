@@ -58,6 +58,7 @@
             </div>
         </header>
 
+        <!-- این باکس اکنون شامل هر دو فیلد نام و آواتار است -->
         <div class="profile-box">
             <div class="profile-row">
                 <label>نام نمایشی:</label>
@@ -156,7 +157,7 @@
                 alert('خطا در ذخیره: ' + error.message);
             } else {
                 alert('پروفایل شما بروزرسانی شد!');
-                checkAuth(); // رفرش کردن نمایش هدر
+                checkAuth();
             }
         }
 
@@ -174,7 +175,7 @@
             const { error } = await _supabase.from('posts').insert([{ 
                 title, content, category: finalCategory, user_id: currentUser.id, 
                 author_name: currentUsername, author_email: currentUser.email,
-                avatar_url: currentAvatar // ذخیره آواتار کاستوم در پست
+                avatar_url: currentAvatar 
             }]);
 
             if (error) {
