@@ -19,26 +19,29 @@
         .container { max-width: 800px; margin: 20px auto; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
         .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
-        .post-meta { color: #888; font-size: 0.95rem; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; }
+        .post-meta { color: #888; font-size: 0.95rem; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; align-items: center; }
+        .author-badge { display: flex; align-items: center; gap: 10px; background: rgba(0,173,181,0.1); padding: 5px 12px; border-radius: 20px; color: var(--accent-color); font-weight: bold; }
+        .avatar-img { width: 30px; height: 30px; border-radius: 50%; background: #222; }
         .post-content { line-height: 1.9; font-size: 1.1rem; }
         .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
         .admin-controls { background: rgba(255, 76, 76, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff4c4c; margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; }
-        .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: bold; }
-        .btn-delete:hover { background: #d43f3f; }
+        .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; }
 
-        /* بخش کامنت‌ها */
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
-        .comment-box { background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .comment-avatar { width: 45px; height: 45px; border-radius: 50%; background: #222; flex-shrink: 0; }
+        .comment-content { flex: 1; }
         .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; color: var(--accent-color); }
         .comment-text { font-size: 0.95rem; line-height: 1.6; margin: 0; }
         
         .add-comment { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 80px; box-sizing: border-box; }
         .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; }
-        
         .delete-comment-btn { color: #ff4c4c; background: none; border: none; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
-        .delete-comment-btn:hover { text-decoration: underline; }
+        
+        #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
+        #scroll-top-btn:hover { background: #008c93; transform: translateY(-3px); }
     </style>
 </head>
 <body>
@@ -53,12 +56,11 @@
 
         <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
         <div class="post-meta">
-            <span id="p-author">✍️ ...</span>
+            <div id="p-author" class="author-badge">...</div>
             <span id="p-cat">📁 ...</span>
         </div>
         <div class="post-content" id="p-content"></div>
 
-        <!-- بخش نظرات -->
         <div class="comments-section">
             <h3>نظرات کاربران</h3>
             <div id="comments-list">در حال بارگذاری نظرات...</div>
@@ -70,11 +72,19 @@
             <p id="login-msg" style="color: #888; font-size: 0.9rem;">برای ثبت نظر باید <a href="login.html" style="color: var(--accent-color);">وارد شوید</a>.</p>
         </div>
     </div>
+    
+    <button id="scroll-top-btn" onclick="scrollToTop()">↑</button>
 
     <script>
-        // همگام‌سازی تم
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        window.onscroll = function() {
+            const scrollBtn = document.getElementById('scroll-top-btn');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) scrollBtn.style.display = "block";
+            else scrollBtn.style.display = "none";
+        };
+        function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         const urlParams = new URLSearchParams(window.location.search);
@@ -88,11 +98,15 @@
         async function initPage() {
             if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
             
-            // بررسی لاگین و ادمین بودن
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                currentUsername = currentUser.user_metadata?.username || 'کاربر';
+                // رفع باگ نام کاربری: اولویت با نام نمایشی است
+                currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
+                if(!currentUsername) {
+                    currentUsername = currentUser.email === ADMIN_EMAIL ? 'مدیر سایت' : 'کاربر';
+                }
+                
                 document.getElementById('comment-form').style.display = 'flex';
                 document.getElementById('login-msg').style.display = 'none';
                 
@@ -110,8 +124,11 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
+            const author = data.author_name || 'ناشناس';
+            const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+
             document.getElementById('p-title').innerText = data.title;
-            document.getElementById('p-author').innerHTML = `✍️ ${data.author_name || 'ناشناس'}`;
+            document.getElementById('p-author').innerHTML = `<img src="${avatar}" class="avatar-img"> ${escapeHtml(author)}`;
             document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
             document.getElementById('p-content').innerHTML = data.content;
         }
@@ -126,16 +143,20 @@
             listDiv.innerHTML = '';
             comments.forEach(c => {
                 const date = new Date(c.created_at).toLocaleDateString('fa-IR');
-                // اگر ادمین باشد، دکمه حذف کنار کامنت ظاهر می‌شود
+                const author = c.author_name || 'کاربر';
+                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment(${c.id})">حذف 🗑️</button>` : '';
                 
                 listDiv.innerHTML += `
                     <div class="comment-box">
-                        <div class="comment-header">
-                            <span><b>${escapeHtml(c.author_name)}</b> - ${date}</span>
-                            ${deleteBtn}
+                        <img src="${avatar}" class="comment-avatar">
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span><b>${escapeHtml(author)}</b> - ${date}</span>
+                                ${deleteBtn}
+                            </div>
+                            <p class="comment-text">${escapeHtml(c.content)}</p>
                         </div>
-                        <p class="comment-text">${escapeHtml(c.content)}</p>
                     </div>
                 `;
             });
