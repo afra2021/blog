@@ -9,22 +9,17 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
-            --border-color: #333; --accent-color: #00adb5;
-        }
-        [data-theme="light"] {
-            --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff;
-            --border-color: #ddd; --accent-color: #007c82;
-        }
-        
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; transition: 0.4s; }
         .container { max-width: 900px; margin: 0 auto; }
         
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         
-        .user-badge { background: var(--border-color); padding: 6px 15px; border-radius: 20px; color: var(--accent-color); font-size: 0.9rem; font-weight: bold; }
+        .user-badge { display: flex; align-items: center; gap: 10px; background: var(--border-color); padding: 6px 15px; border-radius: 20px; color: var(--accent-color); font-size: 0.9rem; font-weight: bold; }
+        .user-badge img { width: 25px; height: 25px; border-radius: 50%; background: #222; }
+        
         .btn { padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
         .btn:hover { opacity: 0.8; }
         .btn-logout { background: #cf6679; color: black; }
@@ -32,15 +27,14 @@
         
         .form-box { background: var(--card-bg); padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
         
-        /* بخش تغییر نام نمایشی */
-        .profile-box { background: rgba(0, 173, 181, 0.05); padding: 15px 20px; border-radius: 10px; border: 1px dashed var(--accent-color); display: flex; gap: 15px; align-items: center; margin-bottom: 25px; flex-wrap: wrap; }
-        .profile-box p { margin: 0; font-size: 0.95rem; font-weight: bold; }
+        .profile-box { background: rgba(0, 173, 181, 0.05); padding: 20px; border-radius: 10px; border: 1px dashed var(--accent-color); display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .profile-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .profile-row label { min-width: 120px; font-weight: bold; font-size: 0.95rem; }
         .profile-box input { margin: 0; padding: 10px; flex: 1; min-width: 200px; }
-        .btn-save-name { background: var(--accent-color); color: white; padding: 10px 20px; }
+        .btn-save-name { background: var(--accent-color); color: white; padding: 10px 20px; align-self: flex-start; }
 
         input, select { width: 100%; padding: 14px; margin-bottom: 18px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; font-family: inherit; box-sizing: border-box; font-size: 1rem; }
         input::placeholder { color: #888; }
-        
         .btn-submit { background: var(--accent-color); color: white; width: 100%; font-size: 1.1rem; padding: 12px; margin-top: 20px; }
         
         .ql-toolbar { background: var(--bg-color); border-radius: 8px 8px 0 0; direction: ltr; border-color: var(--border-color) !important; }
@@ -64,11 +58,16 @@
             </div>
         </header>
 
-        <!-- باکس تنظیم نام نمایشی -->
         <div class="profile-box">
-            <p>نام نمایشی شما:</p>
-            <input type="text" id="display-name-input" placeholder="نامی که کاربران سایت می‌بینند...">
-            <button class="btn btn-save-name" id="save-name-btn" onclick="updateDisplayName()">ثبت نام نمایشی</button>
+            <div class="profile-row">
+                <label>نام نمایشی:</label>
+                <input type="text" id="display-name-input" placeholder="نامی که کاربران می‌بینند...">
+            </div>
+            <div class="profile-row">
+                <label>لینک آواتار:</label>
+                <input type="url" id="avatar-url-input" placeholder="آدرس یک عکس از اینترنت (اختیاری)...">
+            </div>
+            <button class="btn btn-save-name" id="save-name-btn" onclick="updateProfile()">ذخیره پروفایل</button>
         </div>
 
         <div class="form-box">
@@ -109,6 +108,7 @@
         
         let currentUser = null; 
         let currentUsername = '';
+        let currentAvatar = '';
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
         function toggleCustomCategory() {
@@ -123,43 +123,40 @@
             
             currentUser = session.user;
             
-            // اولویت نام نمایشی سفارشی -> سپس یوزرنیم ثبت‌نام -> سپس بررسی مدیر -> سپس ناشناس
             currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
-            
             if (!currentUsername) {
-                if (currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-                    currentUsername = 'مدیر سایت';
-                } else {
-                    currentUsername = 'ناشناس';
-                }
+                currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
             }
             
-            document.getElementById('user-display').innerText = `نویسنده: ${currentUsername}`;
+            currentAvatar = currentUser.user_metadata?.avatar_url || '';
+            const displayAvatar = currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}`;
+            
+            document.getElementById('user-display').innerHTML = `<img src="${displayAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
             document.getElementById('display-name-input').value = currentUsername;
+            document.getElementById('avatar-url-input').value = currentAvatar;
         }
 
-        // تابع ذخیره نام نمایشی در دیتابیس Supabase
-        async function updateDisplayName() {
+        async function updateProfile() {
             const newName = document.getElementById('display-name-input').value.trim();
+            const newAvatar = document.getElementById('avatar-url-input').value.trim();
             if (!newName) return alert('نام نمایشی نمی‌تواند خالی باشد.');
             
             const btn = document.getElementById('save-name-btn');
             btn.innerText = 'در حال ذخیره...';
             btn.disabled = true;
 
-            const { data, error } = await _supabase.auth.updateUser({
-                data: { display_name: newName }
+            const { error } = await _supabase.auth.updateUser({
+                data: { display_name: newName, avatar_url: newAvatar }
             });
 
-            btn.innerText = 'ثبت نام نمایشی';
+            btn.innerText = 'ذخیره پروفایل';
             btn.disabled = false;
 
             if (error) {
-                alert('خطا در ذخیره نام: ' + error.message);
+                alert('خطا در ذخیره: ' + error.message);
             } else {
-                alert('نام نمایشی شما با موفقیت بروزرسانی شد!');
-                currentUsername = newName;
-                document.getElementById('user-display').innerText = `نویسنده: ${newName}`;
+                alert('پروفایل شما بروزرسانی شد!');
+                checkAuth(); // رفرش کردن نمایش هدر
             }
         }
 
@@ -175,7 +172,9 @@
             document.getElementById('submit-btn').disabled = true;
 
             const { error } = await _supabase.from('posts').insert([{ 
-                title, content, category: finalCategory, user_id: currentUser.id, author_name: currentUsername, author_email: currentUser.email 
+                title, content, category: finalCategory, user_id: currentUser.id, 
+                author_name: currentUsername, author_email: currentUser.email,
+                avatar_url: currentAvatar // ذخیره آواتار کاستوم در پست
             }]);
 
             if (error) {
@@ -186,11 +185,7 @@
             }
         }
 
-        async function logout() { 
-            await _supabase.auth.signOut(); 
-            window.location.href = 'login.html'; 
-        }
-        
+        async function logout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
         checkAuth();
     </script>
 </body>
