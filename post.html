@@ -162,17 +162,25 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
-            viewedUsersArray = data.viewed_users ? data.viewed_users.split(',') : [];
-            likedUsersArray = data.liked_users ? data.liked_users.split(',') : [];
+            // محافظت از باگ در صورت خالی بودن ستون
+            viewedUsersArray = (data.viewed_users && data.viewed_users.trim() !== '') ? data.viewed_users.split(',') : [];
+            likedUsersArray = (data.liked_users && data.liked_users.trim() !== '') ? data.liked_users.split(',') : [];
             let newViews = data.views || 0;
 
             if (currentUser && !viewedUsersArray.includes(currentUser.id)) {
                 viewedUsersArray.push(currentUser.id);
                 newViews++;
-                await _supabase.from('posts').update({ 
+                const { error: viewError } = await _supabase.from('posts').update({ 
                     views: newViews, 
                     viewed_users: viewedUsersArray.join(',') 
                 }).eq('id', postId);
+                
+                // در صورت ارور دیتابیس، هشدار نمایش داده می‌شود
+                if (viewError) {
+                    console.error(viewError);
+                    alert("ارور دیتابیس در ثبت بازدید! لطفاً مطمئن شوید ستون views و viewed_users در دیتابیس به درستی ساخته شده‌اند: " + viewError.message);
+                    newViews--; // عدد بازدید به حالت قبل برمی‌گردد
+                }
             }
 
             const author = data.author_name || 'ناشناس';
@@ -233,16 +241,16 @@
             }
             updateLikeUI();
             
-            const { error } = await _supabase.from('posts').update({ 
+            const { error: likeError } = await _supabase.from('posts').update({ 
                 likes: currentLikes,
                 liked_users: likedUsersArray.join(',')
             }).eq('id', postId);
             
-            if (error) {
+            if (likeError) {
                 if (hasLiked) { currentLikes--; hasLiked = false; likedUsersArray.pop(); } 
                 else { currentLikes++; hasLiked = true; likedUsersArray.push(currentUser.id); }
                 updateLikeUI();
-                alert('خطا در ثبت لایک');
+                alert('خطا در ثبت لایک (ممکن است نام ستون liked_users اشتباه باشد): ' + likeError.message);
             }
         }
 
@@ -291,9 +299,8 @@
                 const { error } = await _supabase.from('comments').delete().eq('id', commentId);
                 
                 if (error) {
-                    alert('خطا در حذف از دیتابیس: ' + error.message);
+                    alert('خطا در حذف کامنت از دیتابیس: ' + error.message);
                 } else {
-                    alert('کامنت با موفقیت پاک شد!');
                     loadComments();
                 }
             }
