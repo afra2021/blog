@@ -7,21 +7,15 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
-            --border-color: #333; --accent-color: #00adb5;
-        }
-        [data-theme="light"] {
-            --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff;
-            --border-color: #ddd; --accent-color: #007c82;
-        }
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; transition: 0.4s; }
         .container { max-width: 800px; margin: 20px auto; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
         .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
         .post-meta { color: #888; font-size: 0.95rem; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; align-items: center; }
         .author-badge { display: flex; align-items: center; gap: 10px; background: rgba(0,173,181,0.1); padding: 5px 12px; border-radius: 20px; color: var(--accent-color); font-weight: bold; }
-        .avatar-img { width: 30px; height: 30px; border-radius: 50%; background: #222; }
+        .avatar-img { width: 30px; height: 30px; border-radius: 50%; background: #222; object-fit: cover; }
         .post-content { line-height: 1.9; font-size: 1.1rem; }
         .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
@@ -30,7 +24,7 @@
 
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .comment-avatar { width: 45px; height: 45px; border-radius: 50%; background: #222; flex-shrink: 0; }
+        .comment-avatar { width: 45px; height: 45px; border-radius: 50%; background: #222; flex-shrink: 0; object-fit: cover; }
         .comment-content { flex: 1; }
         .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; color: var(--accent-color); }
         .comment-text { font-size: 0.95rem; line-height: 1.6; margin: 0; }
@@ -93,6 +87,7 @@
         
         let currentUser = null;
         let currentUsername = '';
+        let currentAvatar = '';
         let isAdmin = false;
 
         async function initPage() {
@@ -101,11 +96,13 @@
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                // رفع باگ نام کاربری: اولویت با نام نمایشی است
+                
+                // استخراج نام و آواتار بدون باگ «کاربر»
                 currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
                 if(!currentUsername) {
-                    currentUsername = currentUser.email === ADMIN_EMAIL ? 'مدیر سایت' : 'کاربر';
+                    currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
                 }
+                currentAvatar = currentUser.user_metadata?.avatar_url || '';
                 
                 document.getElementById('comment-form').style.display = 'flex';
                 document.getElementById('login-msg').style.display = 'none';
@@ -125,10 +122,10 @@
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
             const author = data.author_name || 'ناشناس';
-            const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+            const avatarUrl = data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
 
             document.getElementById('p-title').innerText = data.title;
-            document.getElementById('p-author').innerHTML = `<img src="${avatar}" class="avatar-img"> ${escapeHtml(author)}`;
+            document.getElementById('p-author').innerHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
             document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
             document.getElementById('p-content').innerHTML = data.content;
         }
@@ -143,13 +140,13 @@
             listDiv.innerHTML = '';
             comments.forEach(c => {
                 const date = new Date(c.created_at).toLocaleDateString('fa-IR');
-                const author = c.author_name || 'کاربر';
-                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+                const author = c.author_name || 'ناشناس';
+                const avatarUrl = c.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment(${c.id})">حذف 🗑️</button>` : '';
                 
                 listDiv.innerHTML += `
                     <div class="comment-box">
-                        <img src="${avatar}" class="comment-avatar">
+                        <img src="${avatarUrl}" class="comment-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'">
                         <div class="comment-content">
                             <div class="comment-header">
                                 <span><b>${escapeHtml(author)}</b> - ${date}</span>
@@ -167,7 +164,10 @@
             if (!text) return alert('لطفاً متن نظر را وارد کنید.');
 
             const { error } = await _supabase.from('comments').insert([{ 
-                post_id: postId, author_name: currentUsername, content: text 
+                post_id: postId, 
+                author_name: currentUsername, 
+                avatar_url: currentAvatar, // ذخیره آواتار کاستوم در جدول کامنت‌ها
+                content: text 
             }]);
 
             if (error) alert('خطا در ثبت نظر: ' + error.message);
@@ -192,7 +192,6 @@
         }
 
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
-
         initPage();
     </script>
 </body>
