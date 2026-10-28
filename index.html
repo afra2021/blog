@@ -39,6 +39,7 @@
         .author-info { display: flex; align-items: center; gap: 8px; }
         .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; object-fit: cover; }
         .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
+        .like-count { display: flex; align-items: center; gap: 5px; color: #ff4c4c; font-weight: bold; }
         
         #loading { text-align: center; color: #888; font-size: 1.1rem; }
         #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
@@ -126,6 +127,7 @@
                 const author = post.author_name || 'ناشناس';
                 const avatarUrl = post.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
+                const likes = post.likes || 0;
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
@@ -140,6 +142,7 @@
                         <div class="post-meta">
                             <span class="author-info"><img src="${avatarUrl}" class="post-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}</span>
                             <span>📅 ${date}</span>
+                            <span class="like-count">❤️ ${likes}</span>
                         </div>
                         <div class="post-excerpt">${excerpt}</div>
                     </div>
