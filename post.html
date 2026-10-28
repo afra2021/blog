@@ -66,7 +66,7 @@
                 <div id="p-author" class="author-badge">...</div>
                 <span id="p-cat">📁 ...</span>
             </div>
-            <button id="like-btn" class="like-btn" onclick="likePost()">
+            <button id="like-btn" class="like-btn" onclick="toggleLike()">
                 ❤️ <span id="like-count">0</span>
             </button>
         </div>
@@ -155,24 +155,38 @@
             }
         }
 
-        async function likePost() {
-            if (hasLiked) return; // جلوگیری از اسپم لایک
-            
-            hasLiked = true;
-            currentLikes++;
+        async function toggleLike() {
             const btn = document.getElementById('like-btn');
+            
+            // تغییرات را ابتدا روی صفحه کاربر اعمال می‌کنیم تا سریع باشد
+            if (hasLiked) {
+                currentLikes--;
+                hasLiked = false;
+                btn.classList.remove('liked');
+            } else {
+                currentLikes++;
+                hasLiked = true;
+                btn.classList.add('liked');
+            }
+            
             document.getElementById('like-count').innerText = currentLikes;
-            btn.classList.add('liked');
 
-            // آپدیت لایک در دیتابیس
+            // سپس تغییرات را در دیتابیس آپدیت می‌کنیم
             const { error } = await _supabase.from('posts').update({ likes: currentLikes }).eq('id', postId);
             
             if (error) {
-                currentLikes--;
+                // اگر خطایی رخ داد، تغییرات را برمی‌گردانیم
+                if (hasLiked) {
+                    currentLikes--;
+                    hasLiked = false;
+                    btn.classList.remove('liked');
+                } else {
+                    currentLikes++;
+                    hasLiked = true;
+                    btn.classList.add('liked');
+                }
                 document.getElementById('like-count').innerText = currentLikes;
-                btn.classList.remove('liked');
-                hasLiked = false;
-                alert('خطا در ثبت لایک، لطفاً دوباره تلاش کنید.');
+                alert('خطا در ثبت تغییرات لایک، لطفاً دوباره تلاش کنید.');
             }
         }
 
