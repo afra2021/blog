@@ -20,17 +20,15 @@
         header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
+        
         .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .auth-box { display: flex; align-items: center; gap: 10px; background: var(--card-bg); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 0.9rem; }
+        .auth-avatar { width: 28px; height: 28px; border-radius: 50%; background: #333; }
         
         .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; padding: 0; }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.15); }
-
-        .admin-btn {
-            background: linear-gradient(45deg, var(--accent-color), #006b70);
-            color: white; padding: 10px 22px; border-radius: 10px; text-decoration: none; font-weight: bold;
-            font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid transparent;
-        }
-        .admin-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,173,181,0.5); border-color: #fff; }
+        .admin-btn { background: linear-gradient(45deg, var(--accent-color), #006b70); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; }
+        .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,173,181,0.4); }
 
         .main-layout { display: flex; gap: 30px; max-width: 1100px; margin: 40px auto; padding: 0 20px; align-items: flex-start; }
         .sidebar { width: 30%; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); position: sticky; top: 90px; }
@@ -38,24 +36,20 @@
         .content { width: 70%; }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .post-card {
-            background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 25px;
-            border: 1px solid var(--border-color); cursor: pointer; opacity: 0;
-            animation: fadeInUp 0.5s ease forwards; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-        }
-        .post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: var(--accent-color); }
-        .post-card.admin-pin { padding: 15px; margin-bottom: 15px; }
-        .post-card.admin-pin .post-title { font-size: 1.1rem; margin-bottom: 5px; }
+        .post-card { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); cursor: pointer; opacity: 0; animation: fadeInUp 0.5s ease forwards; transition: transform 0.3s, border-color 0.3s; }
+        .post-card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
         
         .category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: #333; color: white; margin-bottom: 10px; }
         .post-title { margin: 0 0 10px 0; font-size: 1.5rem; color: var(--accent-color); }
         .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; }
-        .user-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 5px; }
-        .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
+        .author-info { display: flex; align-items: center; gap: 8px; }
+        .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; }
         
-        #loading { text-align: center; color: #888; font-size: 1.1rem; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } }
+        #loading { text-align: center; color: #888; font-size: 1.1rem; }
+        
+        /* دکمه رفتن به بالا */
+        #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
+        #scroll-top-btn:hover { background: #008c93; transform: translateY(-3px); }
         
         @media (max-width: 768px) { .main-layout { flex-direction: column; } .sidebar, .content { width: 100%; } }
     </style>
@@ -66,7 +60,8 @@
         <a href="index.html" class="header-title">Real <span>Blog</span></a>
         <div class="actions">
             <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☀️</button>
-            <a href="login.html" class="admin-btn">پنل مدیریت / نویسندگان</a>
+            <div id="auth-status"></div>
+            <a href="login.html" class="admin-btn">پنل انتشار</a>
         </div>
     </header>
 
@@ -82,6 +77,8 @@
         </main>
     </div>
 
+    <button id="scroll-top-btn" onclick="scrollToTop()">↑</button>
+
     <script>
         const themeBtn = document.getElementById('theme-btn');
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -95,25 +92,34 @@
             themeBtn.innerText = newTheme === 'dark' ? '☀️' : '🌙';
         }
 
-        function stringToColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            let color = '#';
-            for (let i = 0; i < 3; i++) {
-                let value = (hash >> (i * 8)) & 0xFF;
-                color += ('00' + Math.max(100, value).toString(16)).substr(-2);
-            }
-            return color;
-        }
+        // نمایش دکمه اسکرول
+        window.onscroll = function() {
+            const scrollBtn = document.getElementById('scroll-top-btn');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) scrollBtn.style.display = "block";
+            else scrollBtn.style.display = "none";
+        };
+        function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
+        // بررسی لاگین بودن کاربر برای نمایش در هدر
+        async function checkUserStatus() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            const authDiv = document.getElementById('auth-status');
+            if (session) {
+                let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username;
+                if (!name) name = session.user.email === ADMIN_EMAIL ? 'مدیر سایت' : 'کاربر';
+                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
+                authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar"> <span>${name}</span></div>`;
+            }
+        }
+        checkUserStatus();
+
         async function loadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
-            
             const container = document.getElementById('posts-container');
             const adminContainer = document.getElementById('admin-posts');
             const loading = document.getElementById('loading');
@@ -127,7 +133,7 @@
             posts.forEach((post, index) => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
                 const author = post.author_name || 'ناشناس';
-                const userColor = stringToColor(author);
+                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
                 
                 let tempDiv = document.createElement('div');
@@ -136,22 +142,19 @@
 
                 const cardHTML = `
                     <div class="post-card ${post.author_email === ADMIN_EMAIL ? 'admin-pin' : ''}" 
-                         style="animation-delay: ${index * 0.1}s; border-right: 4px solid ${userColor};" 
+                         style="animation-delay: ${index * 0.1}s;" 
                          onclick="window.location.href='post.html?id=${post.id}'">
                         ${category}
                         <h2 class="post-title">${escapeHtml(post.title)}</h2>
                         <div class="post-meta">
-                            <span><span class="user-dot" style="background:${userColor}"></span> ${escapeHtml(author)}</span>
+                            <span class="author-info"><img src="${avatar}" class="post-avatar"> ${escapeHtml(author)}</span>
                             <span>📅 ${date}</span>
                         </div>
                         <div class="post-excerpt">${excerpt}</div>
                     </div>
                 `;
 
-                // اضافه شدن تمام مطالب به ستون اصلی به ترتیب زمان
                 container.innerHTML += cardHTML;
-
-                // کپی شدن مطالب مدیر در سایدبار برای پین ماندن
                 if (post.author_email === ADMIN_EMAIL || post.author_name === 'مدیر سایت') {
                     adminContainer.innerHTML += cardHTML;
                     adminPostCount++;
