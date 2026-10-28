@@ -13,7 +13,6 @@
         
         #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: var(--accent-color); z-index: 1001; width: 0%; transition: width 0.1s; }
         
-        /* استایل آیکون‌های وکتور */
         svg.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
         .stat-item { display: flex; align-items: center; gap: 6px; }
         
@@ -51,6 +50,7 @@
         .btn-action { display: flex; align-items: center; gap: 6px; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: inherit; color: white; }
         .btn-delete { background: #ff4c4c; } .btn-delete:hover { background: #e00000; }
         .btn-edit { background: var(--accent-color); } .btn-edit:hover { opacity: 0.8; }
+        .btn-cancel { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; } .btn-cancel:hover { background: #444; }
 
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -63,10 +63,37 @@
         textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 80px; box-sizing: border-box; }
         .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; transition: 0.3s;}
         
+        /* استایل Toast (نوتیفیکیشن) و Modal (تایید) */
+        #toast-container { position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+        .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.95rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.error { border-right-color: #ff4c4c; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-box { background: var(--card-bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); text-align: center; transform: scale(0.9); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        .modal-msg { margin: 0 0 20px 0; font-size: 1.1rem; line-height: 1.6; color: var(--text-color); }
+        .modal-actions { display: flex; justify-content: center; gap: 10px; }
+
         @media (min-width: 768px) { .sticky-title { display: block; } }
     </style>
 </head>
 <body>
+
+    <!-- پاپ‌آپ (Modal) سفارشی تایید -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <p class="modal-msg" id="modal-msg">آیا مطمئن هستید؟</p>
+            <div class="modal-actions">
+                <button id="modal-yes" class="btn-action btn-delete">بله، مطمئنم</button>
+                <button id="modal-no" class="btn-cancel">لغو</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- کانتینر پیام‌های شناور -->
+    <div id="toast-container"></div>
 
     <div id="progress-bar"></div>
     
@@ -128,6 +155,35 @@
     </div>
 
     <script>
+        // سیستم پیام‌های پاپ‌آپ و تاییدی
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            const icon = isError ? `<svg class="icon" style="stroke:#ff4c4c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>` : `<svg class="icon" style="stroke:var(--accent-color)" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+        }
+
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                document.getElementById('modal-msg').innerText = message;
+                modal.classList.add('show');
+                
+                document.getElementById('modal-yes').onclick = function() {
+                    modal.classList.remove('show');
+                    resolve(true);
+                };
+                document.getElementById('modal-no').onclick = function() {
+                    modal.classList.remove('show');
+                    resolve(false);
+                };
+            });
+        }
+
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         
@@ -160,7 +216,10 @@
         const iconEye = `<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
 
         async function initPage() {
-            if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
+            if (!postId) {
+                document.getElementById('p-title').innerText = 'پست پیدا نشد!';
+                return showToast('شناسه مطلب نامعتبر است', true);
+            }
             
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
@@ -180,7 +239,10 @@
 
         async function loadPost() {
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
-            if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
+            if (error || !data) {
+                document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
+                return showToast('مطلب یافت نشد یا پاک شده است', true);
+            }
 
             viewedUsersArray = (data.viewed_users && data.viewed_users.trim() !== '') ? data.viewed_users.split(',') : [];
             likedUsersArray = (data.liked_users && data.liked_users.trim() !== '') ? data.liked_users.split(',') : [];
@@ -209,7 +271,7 @@
             let tempDiv = document.createElement('div');
             tempDiv.innerHTML = data.content;
             let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
-            const readTime = Math.ceil(textContent.split(' ').length / 200);
+            const readTime = Math.max(1, Math.ceil(textContent.split(' ').length / 200));
             const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
             document.getElementById('p-readtime').innerHTML = `${iconClock} ${readTimeDisplay}`;
@@ -236,7 +298,7 @@
         }
 
         async function toggleLike() {
-            if (!currentUser) return alert('برای لایک کردن باید وارد سایت شوید.');
+            if (!currentUser) return showToast('برای لایک کردن باید وارد سایت شوید.', true);
 
             if (hasLiked) { 
                 currentLikes--; 
@@ -257,6 +319,7 @@
                 if (hasLiked) { currentLikes--; hasLiked = false; likedUsersArray.pop(); } 
                 else { currentLikes++; hasLiked = true; likedUsersArray.push(currentUser.id); }
                 updateLikeUI();
+                showToast('خطا در ارتباط با سرور', true);
             }
         }
 
@@ -290,28 +353,46 @@
 
         async function addComment() {
             const text = document.getElementById('new-comment-text').value.trim();
-            if (!text) return alert('لطفاً متن نظر را وارد کنید.');
+            if (!text) return showToast('لطفاً متن نظر را وارد کنید.', true);
 
             const { error } = await _supabase.from('comments').insert([{ 
                 post_id: postId, author_name: currentUsername, avatar_url: currentAvatar, content: text 
             }]);
 
-            if (!error) { document.getElementById('new-comment-text').value = ''; loadComments(); }
+            if (!error) { 
+                document.getElementById('new-comment-text').value = ''; 
+                showToast('نظر شما با موفقیت ثبت شد!');
+                loadComments(); 
+            } else {
+                showToast('خطا در ثبت نظر', true);
+            }
         }
 
         async function deleteComment(commentId) {
-            if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
+            if(await showConfirm('آیا از حذف این کامنت مطمئن هستید؟')) {
                 const { error } = await _supabase.from('comments').delete().eq('id', commentId);
-                if (!error) loadComments();
+                if (!error) {
+                    showToast('کامنت با موفقیت حذف شد.');
+                    loadComments();
+                } else {
+                    showToast('خطا در حذف کامنت', true);
+                }
             }
         }
 
         function editThisPost() { window.location.href = `admin.html?edit=${postId}`; }
+        
         async function deleteThisPost() {
-            if(confirm('این مطلب برای همیشه حذف شود؟')) {
-                await _supabase.from('posts').delete().eq('id', postId); window.location.href = 'index.html';
+            if(await showConfirm('آیا از حذف کامل این مطلب مطمئن هستید؟ (این عملیات غیرقابل بازگشت است)')) {
+                const { error } = await _supabase.from('posts').delete().eq('id', postId);
+                if(!error) {
+                    window.location.href = 'index.html';
+                } else {
+                    showToast('خطا در حذف مطلب', true);
+                }
             }
         }
+        
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
         
         initPage();
