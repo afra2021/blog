@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پروفایل نویسنده - Real Blog</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(26, 26, 26, 0.95); }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(255, 255, 255, 0.95); }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
+        
+        header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
+        .header-title span { color: var(--accent-color); }
+        .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; padding: 0; }
+
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        
+        .author-header { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .author-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-color); margin-bottom: 15px; }
+        .author-name { font-size: 2rem; margin: 0; color: var(--accent-color); }
+        .author-stats { font-size: 1rem; color: #888; margin-top: 10px; }
+
+        .post-card { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.3s; }
+        .post-card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
+        .category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: #333; color: white; margin-bottom: 10px; }
+        .post-title { margin: 0 0 10px 0; font-size: 1.4rem; color: var(--accent-color); }
+        .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 10px; display: flex; gap: 15px; align-items: center; }
+        .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="header-title">Real <span>Blog</span></a>
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☀️</button>
+    </header>
+
+    <div class="container">
+        <div class="author-header" id="author-header" style="display:none;">
+            <img id="a-avatar" src="" class="author-avatar">
+            <h1 id="a-name" class="author-name">...</h1>
+            <div id="a-stats" class="author-stats">تعداد مطالب: ۰</div>
+        </div>
+
+        <h3 style="border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">نوشته‌های این نویسنده</h3>
+        <div id="posts-container">در حال دریافت اطلاعات...</div>
+    </div>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        function toggleTheme() {
+            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-btn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
+        const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
+        const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const authorId = urlParams.get('id');
+
+        async function loadAuthorData() {
+            if (!authorId) return document.getElementById('posts-container').innerText = 'نویسنده پیدا نشد.';
+
+            const { data: posts, error } = await _supabase.from('posts').select('*').eq('user_id', authorId).order('created_at', { ascending: false });
+            
+            const container = document.getElementById('posts-container');
+            
+            if (error || !posts || posts.length === 0) {
+                container.innerHTML = '<p>این نویسنده هنوز مطلبی منتشر نکرده است.</p>';
+                return;
+            }
+
+            const authorName = posts[0].author_name || 'ناشناس';
+            const authorAvatar = posts[0].avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${authorName}`;
+
+            document.getElementById('author-header').style.display = 'block';
+            document.getElementById('a-name').innerText = authorName;
+            document.getElementById('a-avatar').src = authorAvatar;
+            document.getElementById('a-stats').innerText = `مجموع مطالب منتشر شده: ${posts.length} پست`;
+
+            container.innerHTML = '';
+            posts.forEach(post => {
+                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
+                const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
+                const likes = post.likes || 0;
+                
+                let tempDiv = document.createElement('div');
+                tempDiv.innerHTML = post.content;
+                let excerpt = (tempDiv.textContent || tempDiv.innerText).substring(0, 150) + '...';
+
+                container.innerHTML += `
+                    <div class="post-card" onclick="window.location.href='post.html?id=${post.id}'">
+                        ${category}
+                        <h2 class="post-title">${escapeHtml(post.title)}</h2>
+                        <div class="post-meta">
+                            <span>📅 ${date}</span>
+                            <span style="color: #ff4c4c; font-weight:bold;">❤️ ${likes}</span>
+                        </div>
+                        <div class="post-excerpt">${excerpt}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
+        loadAuthorData();
+    </script>
+</body>
+</html>
