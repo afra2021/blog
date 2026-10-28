@@ -9,26 +9,45 @@
     <style>
         :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
         [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; transition: 0.4s; }
-        .container { max-width: 800px; margin: 20px auto; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s; padding-bottom: 50px; }
+        
+        /* نوار پیشرفت مطالعه */
+        #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: var(--accent-color); z-index: 1001; width: 0%; transition: width 0.1s; }
+        
+        /* منوی چسبان نویسنده (بالای صفحه حین اسکرول) */
+        .sticky-author-bar { position: fixed; top: -70px; left: 0; width: 100%; background: rgba(30,30,30,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; box-sizing: border-box; z-index: 999; transition: top 0.3s; }
+        .sticky-author-bar.visible { top: 0; }
+        .sticky-author { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+        .sticky-author img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .sticky-title { font-size: 0.9rem; color: #888; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
+        
+        .container { max-width: 800px; margin: 50px auto 20px; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
         .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
         
         .post-meta-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
-        .post-meta { color: #888; font-size: 0.95rem; display: flex; gap: 20px; align-items: center; }
-        .author-badge { display: flex; align-items: center; gap: 10px; background: rgba(0,173,181,0.1); padding: 5px 12px; border-radius: 20px; color: var(--accent-color); font-weight: bold; }
+        .post-meta { color: #888; font-size: 0.95rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .author-badge { display: flex; align-items: center; gap: 10px; background: rgba(0,173,181,0.1); padding: 5px 12px; border-radius: 20px; color: var(--accent-color); font-weight: bold; text-decoration: none; transition: 0.3s;}
+        .author-badge:hover { background: var(--accent-color); color: white; }
         .avatar-img { width: 30px; height: 30px; border-radius: 50%; background: #222; object-fit: cover; }
         
-        .like-btn { background: rgba(255, 76, 76, 0.1); color: #ff4c4c; border: 1px solid #ff4c4c; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+        .stats-badge { background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
+        
+        /* انیمیشن پاپ لایک */
+        @keyframes heartBurst { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        
+        .like-btn { background: rgba(255, 76, 76, 0.1); color: #ff4c4c; border: 1px solid #ff4c4c; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
         .like-btn:hover { background: #ff4c4c; color: white; transform: scale(1.05); }
-        .like-btn.liked { background: #ff4c4c; color: white; }
+        .like-btn.liked { background: #ff4c4c; color: white; animation: heartBurst 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .post-content { line-height: 1.9; font-size: 1.1rem; }
         .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
         .admin-controls { background: rgba(0, 173, 181, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-color); margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; }
-        .btn-edit { background: var(--accent-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-delete:hover { background: #e00000; }
+        .btn-edit { background: var(--accent-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-edit:hover { opacity: 0.8; }
 
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -39,17 +58,24 @@
         
         .add-comment { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 80px; box-sizing: border-box; }
-        .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; }
-        .delete-comment-btn { color: #ff4c4c; background: none; border: none; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+        .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; transition: 0.3s;}
+        .btn-submit-comment:hover { opacity: 0.8; }
         
-        #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
-        #scroll-top-btn:hover { background: #008c93; transform: translateY(-3px); }
+        @media (min-width: 768px) { .sticky-title { display: block; } }
     </style>
 </head>
 <body>
 
+    <div id="progress-bar"></div>
+    
+    <div class="sticky-author-bar" id="sticky-bar">
+        <div class="sticky-author" id="sticky-author-info"></div>
+        <div class="sticky-title" id="sticky-title">...</div>
+        <button id="sticky-like-btn" class="like-btn" onclick="toggleLike()">❤️ <span id="sticky-like-count">0</span></button>
+    </div>
+
     <div class="container">
-        <a href="index.html" style="color: #888; text-decoration: none; display: inline-block; margin-bottom: 20px;">← بازگشت به صفحه اصلی</a>
+        <a href="index.html" style="color: #888; text-decoration: none; display: inline-block; margin-bottom: 20px; transition: 0.2s;">← بازگشت به صفحه اصلی</a>
         
         <div id="admin-panel" class="admin-controls">
             <span style="color: var(--accent-color); font-weight: bold;">پنل مدیریت مطلب</span>
@@ -61,10 +87,11 @@
 
         <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
         
-        <div class="post-meta-container">
+        <div class="post-meta-container" id="main-meta-container">
             <div class="post-meta">
-                <div id="p-author" class="author-badge">...</div>
-                <span id="p-cat">📁 ...</span>
+                <a href="#" id="p-author" class="author-badge">...</a>
+                <span class="stats-badge" id="p-readtime">⏱️ ...</span>
+                <span class="stats-badge" id="p-views">👁️ ...</span>
             </div>
             <button id="like-btn" class="like-btn" onclick="toggleLike()">
                 ❤️ <span id="like-count">0</span>
@@ -73,8 +100,8 @@
 
         <div class="post-content" id="p-content"></div>
 
-        <div class="comments-section">
-            <h3>نظرات کاربران</h3>
+        <div class="comments-section" id="comments-anchor">
+            <h3>نظرات کاربران <span id="comment-count-display" style="color:var(--accent-color); font-size:0.9rem;"></span></h3>
             <div id="comments-list">در حال بارگذاری نظرات...</div>
 
             <div class="add-comment" id="comment-form" style="display: none;">
@@ -84,31 +111,37 @@
             <p id="login-msg" style="color: #888; font-size: 0.9rem;">برای ثبت نظر باید <a href="login.html" style="color: var(--accent-color);">وارد شوید</a>.</p>
         </div>
     </div>
-    
-    <button id="scroll-top-btn" onclick="scrollToTop()">↑</button>
 
     <script>
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         
+        // محاسبه نوار پیشرفت و نوار چسبان
         window.onscroll = function() {
-            const scrollBtn = document.getElementById('scroll-top-btn');
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) scrollBtn.style.display = "block";
-            else scrollBtn.style.display = "none";
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+            
+            // منطق منوی چسبان
+            const metaContainer = document.getElementById('main-meta-container');
+            const stickyBar = document.getElementById('sticky-bar');
+            if(metaContainer) {
+                if(winScroll > metaContainer.offsetTop + 100) {
+                    stickyBar.classList.add('visible');
+                } else {
+                    stickyBar.classList.remove('visible');
+                }
+            }
         };
-        function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id');
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
         
-        let currentUser = null;
-        let currentUsername = '';
-        let currentAvatar = '';
-        let isAdmin = false;
-        let currentLikes = 0;
-        let hasLiked = false;
+        let currentUser = null; let currentUsername = ''; let currentAvatar = '';
+        let isAdmin = false; let currentLikes = 0; let hasLiked = false;
 
         async function initPage() {
             if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
@@ -116,19 +149,13 @@
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                
                 currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
-                if(!currentUsername) {
-                    currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
-                }
+                if(!currentUsername) currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
                 currentAvatar = currentUser.user_metadata?.avatar_url || '';
                 
                 document.getElementById('comment-form').style.display = 'flex';
                 document.getElementById('login-msg').style.display = 'none';
-                
-                if (currentUser.email === ADMIN_EMAIL) {
-                    isAdmin = true;
-                }
+                if (currentUser.email === ADMIN_EMAIL) isAdmin = true;
             }
 
             loadPost();
@@ -139,62 +166,73 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
+            // آپدیت بازدیدها
+            const newViews = (data.views || 0) + 1;
+            await _supabase.from('posts').update({ views: newViews }).eq('id', postId);
+
             const author = data.author_name || 'ناشناس';
             const avatarUrl = data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
-            
             currentLikes = data.likes || 0;
 
             document.getElementById('p-title').innerText = data.title;
-            document.getElementById('p-author').innerHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
-            document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
+            document.getElementById('sticky-title').innerText = data.title;
+            
+            const authorHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
+            document.getElementById('p-author').innerHTML = authorHTML;
+            document.getElementById('p-author').href = `author.html?id=${data.user_id}`;
+            document.getElementById('sticky-author-info').innerHTML = authorHTML;
+            
+            // محاسبه زمان مطالعه
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.content;
+            const wordCount = (tempDiv.textContent || tempDiv.innerText).trim().split(/\s+/).length;
+            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
+            document.getElementById('p-readtime').innerText = `⏱️ ${readTime} دقیقه`;
+            document.getElementById('p-views').innerText = `👁️ ${newViews}`;
+            
             document.getElementById('p-content').innerHTML = data.content;
-            document.getElementById('like-count').innerText = currentLikes;
+            updateLikeUI();
 
             if (currentUser && (isAdmin || currentUser.id === data.user_id)) {
                 document.getElementById('admin-panel').style.display = 'flex';
             }
         }
 
-        async function toggleLike() {
-            const btn = document.getElementById('like-btn');
-            
-            // تغییرات را ابتدا روی صفحه کاربر اعمال می‌کنیم تا سریع باشد
-            if (hasLiked) {
-                currentLikes--;
-                hasLiked = false;
-                btn.classList.remove('liked');
-            } else {
-                currentLikes++;
-                hasLiked = true;
-                btn.classList.add('liked');
-            }
-            
+        function updateLikeUI() {
             document.getElementById('like-count').innerText = currentLikes;
+            document.getElementById('sticky-like-count').innerText = currentLikes;
+            const btn1 = document.getElementById('like-btn');
+            const btn2 = document.getElementById('sticky-like-btn');
+            if (hasLiked) {
+                btn1.classList.add('liked'); btn2.classList.add('liked');
+            } else {
+                btn1.classList.remove('liked'); btn2.classList.remove('liked');
+            }
+        }
 
-            // سپس تغییرات را در دیتابیس آپدیت می‌کنیم
-            const { error } = await _supabase.from('posts').update({ likes: currentLikes }).eq('id', postId);
+        async function toggleLike() {
+            if (hasLiked) { currentLikes--; hasLiked = false; } 
+            else { currentLikes++; hasLiked = true; }
+            updateLikeUI();
             
+            const { error } = await _supabase.from('posts').update({ likes: currentLikes }).eq('id', postId);
             if (error) {
-                // اگر خطایی رخ داد، تغییرات را برمی‌گردانیم
-                if (hasLiked) {
-                    currentLikes--;
-                    hasLiked = false;
-                    btn.classList.remove('liked');
-                } else {
-                    currentLikes++;
-                    hasLiked = true;
-                    btn.classList.add('liked');
-                }
-                document.getElementById('like-count').innerText = currentLikes;
-                alert('خطا در ثبت تغییرات لایک، لطفاً دوباره تلاش کنید.');
+                if (hasLiked) { currentLikes--; hasLiked = false; } else { currentLikes++; hasLiked = true; }
+                updateLikeUI();
+                alert('خطا در ثبت تغییرات لایک');
             }
         }
 
         async function loadComments() {
             const { data: comments, error } = await _supabase.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
             const listDiv = document.getElementById('comments-list');
+            const countDisplay = document.getElementById('comment-count-display');
             
             if (error) return listDiv.innerHTML = 'خطا در دریافت نظرات.';
+            
+            countDisplay.innerText = `(${comments ? comments.length : 0})`;
+            
             if (!comments || comments.length === 0) return listDiv.innerHTML = '<p style="color:#888; font-size:0.9rem;">هنوز نظری ثبت نشده است.</p>';
 
             listDiv.innerHTML = '';
@@ -208,14 +246,10 @@
                     <div class="comment-box">
                         <img src="${avatarUrl}" class="comment-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'">
                         <div class="comment-content">
-                            <div class="comment-header">
-                                <span><b>${escapeHtml(author)}</b> - ${date}</span>
-                                ${deleteBtn}
-                            </div>
+                            <div class="comment-header"><span><b>${escapeHtml(author)}</b> - ${date}</span>${deleteBtn}</div>
                             <p class="comment-text">${escapeHtml(c.content)}</p>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
@@ -224,31 +258,28 @@
             if (!text) return alert('لطفاً متن نظر را وارد کنید.');
 
             const { error } = await _supabase.from('comments').insert([{ 
-                post_id: postId, 
-                author_name: currentUsername, 
-                avatar_url: currentAvatar,
-                content: text 
+                post_id: postId, author_name: currentUsername, avatar_url: currentAvatar, content: text 
             }]);
 
             if (error) alert('خطا در ثبت نظر: ' + error.message);
-            else {
-                document.getElementById('new-comment-text').value = '';
+            else { document.getElementById('new-comment-text').value = ''; loadComments(); }
+        }
+
+        async function deleteComment(commentId) {
+            if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
+                await _supabase.from('comments').delete().eq('id', commentId);
                 loadComments();
             }
         }
 
-        function editThisPost() {
-            window.location.href = `admin.html?edit=${postId}`;
-        }
-
+        function editThisPost() { window.location.href = `admin.html?edit=${postId}`; }
         async function deleteThisPost() {
             if(confirm('این مطلب برای همیشه حذف شود؟')) {
-                await _supabase.from('posts').delete().eq('id', postId);
-                window.location.href = 'index.html';
+                await _supabase.from('posts').delete().eq('id', postId); window.location.href = 'index.html';
             }
         }
-
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
+        
         initPage();
     </script>
 </body>
