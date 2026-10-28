@@ -2,14 +2,14 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>خواندن مطلب - Real Blog</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
         [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s; padding-bottom: 50px; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; }
         
         #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: var(--accent-color); z-index: 1001; width: 0%; transition: width 0.1s; }
         
@@ -23,7 +23,7 @@
         .sticky-title { font-size: 0.9rem; color: #888; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
         
         .container { max-width: 800px; margin: 50px auto 20px; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
+        .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; line-height: 1.4; }
         
         .post-meta-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
         .post-meta { color: #888; font-size: 0.95rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
@@ -44,7 +44,7 @@
         .like-btn.liked svg.icon-heart { stroke: white; fill: white; }
 
         .post-content { line-height: 1.9; font-size: 1.1rem; }
-        .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; border: 1px solid var(--border-color); }
+        .post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; border: 1px solid var(--border-color); }
         
         .admin-controls { background: rgba(0, 173, 181, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-color); margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .btn-action { display: flex; align-items: center; gap: 6px; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: inherit; color: white; }
@@ -56,16 +56,15 @@
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .comment-avatar { width: 45px; height: 45px; border-radius: 50%; background: #222; flex-shrink: 0; object-fit: cover; }
         .comment-content { flex: 1; }
-        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; color: var(--accent-color); }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; color: var(--accent-color); flex-wrap: wrap; gap: 10px; }
         .comment-text { font-size: 0.95rem; line-height: 1.6; margin: 0; color: var(--text-color); }
         
         .add-comment { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
         textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 80px; box-sizing: border-box; }
         .btn-submit-comment { background: var(--accent-color); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; width: 150px; transition: 0.3s;}
         
-        /* استایل Toast (نوتیفیکیشن) و Modal (تایید) */
-        #toast-container { position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
-        .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.95rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
+        #toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+        .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.9rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
         .toast.show { opacity: 1; transform: translateX(0); }
         .toast.error { border-right-color: #ff4c4c; }
 
@@ -76,12 +75,23 @@
         .modal-msg { margin: 0 0 20px 0; font-size: 1.1rem; line-height: 1.6; color: var(--text-color); }
         .modal-actions { display: flex; justify-content: center; gap: 10px; }
 
+        /* استایل‌های رسپانسیو موبایل */
+        @media (max-width: 768px) {
+            .container { margin: 20px 10px; padding: 20px 15px; }
+            .post-title { font-size: 1.6rem; }
+            .post-meta-container { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .like-btn { width: 100%; justify-content: center; }
+            .admin-controls { flex-direction: column; align-items: stretch; text-align: center; gap: 15px; }
+            .admin-controls div { display: flex; flex-direction: column; width: 100%; gap: 10px; }
+            .btn-action { justify-content: center; }
+            .sticky-author-bar { padding: 10px 15px; }
+            .btn-submit-comment { width: 100%; }
+        }
         @media (min-width: 768px) { .sticky-title { display: block; } }
     </style>
 </head>
 <body>
 
-    <!-- پاپ‌آپ (Modal) سفارشی تایید -->
     <div id="custom-modal" class="modal-overlay">
         <div class="modal-box">
             <p class="modal-msg" id="modal-msg">آیا مطمئن هستید؟</p>
@@ -92,7 +102,6 @@
         </div>
     </div>
     
-    <!-- کانتینر پیام‌های شناور -->
     <div id="toast-container"></div>
 
     <div id="progress-bar"></div>
@@ -113,7 +122,7 @@
         
         <div id="admin-panel" class="admin-controls">
             <span style="color: var(--accent-color); font-weight: bold;">پنل مدیریت مطلب</span>
-            <div style="display:flex; gap:10px;">
+            <div>
                 <button class="btn-action btn-edit" onclick="editThisPost()">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> ویرایش
                 </button>
@@ -155,7 +164,6 @@
     </div>
 
     <script>
-        // سیستم پیام‌های پاپ‌آپ و تاییدی
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
