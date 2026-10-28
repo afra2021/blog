@@ -18,18 +18,34 @@
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; }
         .header-title span { color: var(--accent-color); }
         .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .auth-box { display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: bold; }
+        .auth-avatar { width: 28px; height: 28px; border-radius: 50%; background: #333; object-fit: cover; }
+        
         .theme-toggle { background: none; border: none; cursor: pointer; transition: 0.3s; padding: 0; color: var(--text-color); }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.15); color: var(--accent-color); }
-        .admin-btn { background: linear-gradient(45deg, #555, #333); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; font-family: inherit;}
+        .admin-btn { background: linear-gradient(45deg, #555, #333); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; border: none; cursor: pointer; font-family: inherit;}
         
         .main-layout { display: flex; gap: 30px; max-width: 1100px; margin: 30px auto; padding: 0 20px; align-items: flex-start; }
-        .editor-section { width: 60%; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .list-section { width: 40%; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .editor-section { width: 65%; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .sidebar-section { width: 35%; display: flex; flex-direction: column; gap: 25px; }
+        .panel-box { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
         
-        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1rem; box-sizing: border-box; }
-        textarea { height: 300px; resize: vertical; }
+        h3 { margin-top: 0; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; color: var(--accent-color); }
         
-        .file-upload-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: rgba(0, 173, 181, 0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent-color); }
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1rem; box-sizing: border-box; }
+        
+        /* استایل نوار ابزار ویرایشگر */
+        .toolbar { display: flex; gap: 5px; background: rgba(0, 173, 181, 0.1); padding: 10px; border-radius: 8px 8px 0 0; border: 1px solid var(--border-color); border-bottom: none; flex-wrap: wrap; }
+        .toolbar button { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; }
+        .toolbar button:hover { background: var(--accent-color); color: white; }
+        
+        /* استایل خود ویرایشگر */
+        .rich-editor { width: 100%; min-height: 300px; padding: 15px; border-radius: 0 0 8px 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1.05rem; box-sizing: border-box; line-height: 1.8; margin-bottom: 15px; overflow-y: auto; outline: none; }
+        .rich-editor:focus { border-color: var(--accent-color); }
+        .rich-editor img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+        
+        .file-upload-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.2); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--accent-color); }
         .file-upload-wrapper input[type="file"] { margin: 0; padding: 0; border: none; width: auto; background: transparent; }
         
         button.btn-primary { background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; width: 100%; font-size: 1.1rem; transition: 0.3s; }
@@ -37,9 +53,9 @@
         
         .post-item { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
         .post-item:hover { border-color: var(--accent-color); transform: translateX(-5px); }
-        .post-item h4 { margin: 0 0 5px 0; font-size: 1rem; color: var(--accent-color); }
+        .post-item h4 { margin: 0 0 5px 0; font-size: 1rem; color: var(--text-color); }
         .post-item-actions { display: flex; gap: 8px; }
-        .btn-small { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.8rem; color: white; display: flex; align-items: center; gap: 4px;}
+        .btn-small { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.8rem; color: white; }
         .btn-edit { background: var(--accent-color); }
         .btn-delete { background: #ff4c4c; }
 
@@ -60,7 +76,8 @@
             header { padding: 12px 15px; flex-direction: column; align-items: stretch; }
             .header-left, .actions { justify-content: space-between; width: 100%; }
             .main-layout { flex-direction: column; padding: 0 10px; }
-            .editor-section, .list-section { width: 100%; box-sizing: border-box; }
+            .editor-section, .sidebar-section { width: 100%; box-sizing: border-box; }
+            .file-upload-wrapper { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -85,34 +102,73 @@
             <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
                 <svg class="icon" style="width:22px; height:22px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
             </button>
-            <button onclick="logout()" class="admin-btn">خروج از حساب</button>
+            <div id="auth-status"></div>
+            <button onclick="logout()" class="admin-btn">خروج</button>
             <a href="index.html" class="admin-btn" style="background: var(--accent-color);">مشاهده سایت</a>
         </div>
     </header>
 
     <div class="main-layout" id="app-content" style="display: none;">
+        
+        <!-- بخش ویرایشگر مطلب -->
         <div class="editor-section">
-            <h2 id="editor-title" style="margin-top:0; color:var(--accent-color);">نوشتن مطلب جدید</h2>
+            <h3 id="editor-title">نوشتن مطلب جدید</h3>
+            
             <input type="text" id="post-title" placeholder="عنوان مطلب را اینجا بنویسید...">
-            <input type="text" id="post-category" placeholder="دسته‌بندی (مثلاً: روزمره، تکنولوژی، آموزشی)">
+            
+            <!-- انتخاب دسته‌بندی با لیست پیشنهادی -->
+            <input type="text" id="post-category" list="categories" placeholder="دسته‌بندی (انتخاب کنید یا تایپ کنید)">
+            <datalist id="categories">
+                <option value="تکنولوژی">
+                <option value="روزمره">
+                <option value="آموزشی">
+                <option value="دلنوشته">
+                <option value="داستان">
+            </datalist>
+            
+            <!-- نوار ابزار پیشرفته -->
+            <div class="toolbar">
+                <button type="button" onclick="formatText('bold')" title="ضخیم (Bold)"><b>B</b></button>
+                <button type="button" onclick="formatText('italic')" title="کج (Italic)"><i>I</i></button>
+                <button type="button" onclick="formatText('underline')" title="زیرخط (Underline)"><u>U</u></button>
+                <button type="button" onclick="formatText('formatBlock', 'H2')" title="تیتر اصلی">تیتر بزرگ</button>
+                <button type="button" onclick="formatText('formatBlock', 'H3')" title="تیتر فرعی">تیتر کوچک</button>
+                <button type="button" onclick="insertLink()" title="افزودن لینک">🔗 لینک</button>
+            </div>
+            
+            <!-- محیط تایپ پیشرفته -->
+            <div id="post-content" class="rich-editor" contenteditable="true" data-placeholder="متن خود را اینجا بنویسید..."></div>
             
             <div class="file-upload-wrapper">
-                <label>عکس پست/کاور:</label>
-                <input type="file" id="post-image" accept="image/*">
-                <button type="button" class="btn-small" onclick="uploadImage()" style="background:var(--accent-color);">آپلود عکس در متن</button>
+                <div>
+                    <label style="font-size:0.9rem; font-weight:bold; color:var(--accent-color);">عکس پست/کاور:</label>
+                    <input type="file" id="post-image" accept="image/*">
+                </div>
+                <button type="button" class="btn-small" onclick="uploadImage()" style="background:var(--accent-color); font-size:1rem; padding:8px 15px;">آپلود عکس در متن</button>
             </div>
 
-            <textarea id="post-content" placeholder="متن کامل مطلب شما... (از تگ‌های HTML می‌توانید استفاده کنید)"></textarea>
             <button class="btn-primary" onclick="savePost()" id="submit-btn">انتشار مطلب</button>
         </div>
 
-        <div class="list-section">
-            <h3 style="margin-top:0; border-bottom:2px solid var(--accent-color); padding-bottom:10px;">مطالب من</h3>
-            <div id="my-posts-list">در حال دریافت...</div>
+        <div class="sidebar-section">
+            <!-- بخش تنظیمات پروفایل -->
+            <div class="panel-box">
+                <h3>تنظیمات پروفایل</h3>
+                <input type="text" id="prof-name" placeholder="نام نمایشی شما">
+                <input type="text" id="prof-avatar" placeholder="لینک مستقیم عکس آواتار (اختیاری)">
+                <button class="btn-primary" id="prof-btn" style="font-size:0.95rem; padding:10px;" onclick="updateProfile()">ذخیره پروفایل</button>
+            </div>
+
+            <!-- بخش لیست مطالب من -->
+            <div class="panel-box">
+                <h3>مطالب من</h3>
+                <div id="my-posts-list">در حال دریافت...</div>
+            </div>
         </div>
     </div>
 
     <script>
+        // توابع رابط کاربری (پاپ‌آپ و پیام‌ها)
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -142,6 +198,17 @@
             localStorage.setItem('theme', newTheme);
         }
 
+        // عملکرد نوار ابزار ویرایشگر پیشرفته
+        function formatText(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('post-content').focus();
+        }
+        function insertLink() {
+            const url = prompt("آدرس لینک (URL) را وارد کنید:", "https://");
+            if (url) formatText('createLink', url);
+        }
+
+        // ارتباط با دیتابیس
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         
         let currentUser = null;
@@ -154,9 +221,47 @@
             } else {
                 currentUser = session.user;
                 document.getElementById('app-content').style.display = 'flex';
+                updateHeaderAuthUI();
+                loadProfileSettings();
                 loadMyPosts();
                 checkEditMode();
             }
+        }
+
+        function updateHeaderAuthUI() {
+            const authDiv = document.getElementById('auth-status');
+            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.email.split('@')[0];
+            let avatar = currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
+            authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
+        }
+
+        function loadProfileSettings() {
+            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || '';
+            let avatar = currentUser.user_metadata?.avatar_url || '';
+            document.getElementById('prof-name').value = name;
+            document.getElementById('prof-avatar').value = avatar;
+        }
+
+        async function updateProfile() {
+            const newName = document.getElementById('prof-name').value.trim();
+            const newAvatar = document.getElementById('prof-avatar').value.trim();
+            const btn = document.getElementById('prof-btn');
+            
+            if(!newName) return showToast('نام نمایشی نمی‌تواند خالی باشد!', true);
+            
+            btn.innerText = 'در حال ذخیره...';
+            const { data, error } = await _supabase.auth.updateUser({
+                data: { display_name: newName, avatar_url: newAvatar }
+            });
+
+            if (error) {
+                showToast('خطا در بروزرسانی پروفایل', true);
+            } else {
+                showToast('پروفایل با موفقیت بروزرسانی شد!');
+                currentUser = data.user;
+                updateHeaderAuthUI();
+            }
+            btn.innerText = 'ذخیره پروفایل';
         }
 
         async function loadMyPosts() {
@@ -172,7 +277,7 @@
                 listDiv.innerHTML += `
                     <div class="post-item">
                         <div>
-                            <h4>${post.title}</h4>
+                            <h4>${escapeHtml(post.title)}</h4>
                             <span style="font-size:0.8rem; color:#888;">📅 ${date} | ❤️ ${post.likes || 0}</span>
                         </div>
                         <div class="post-item-actions">
@@ -188,7 +293,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             editingPostId = urlParams.get('edit');
             if (editingPostId) {
-                document.getElementById('editor-title').innerText = 'ویرایش مطلب';
+                document.getElementById('editor-title').innerText = '✏️ ویرایش مطلب';
                 document.getElementById('submit-btn').innerText = 'ذخیره تغییرات';
                 loadPostForEdit(editingPostId);
             }
@@ -199,7 +304,8 @@
             if (data) {
                 document.getElementById('post-title').value = data.title;
                 document.getElementById('post-category').value = data.category || '';
-                document.getElementById('post-content').value = data.content;
+                // لود کردن محتوا درون ادیتور پیشرفته
+                document.getElementById('post-content').innerHTML = data.content;
             } else {
                 showToast('خطا در لود مطلب', true);
             }
@@ -208,10 +314,11 @@
         async function savePost() {
             const title = document.getElementById('post-title').value.trim();
             const category = document.getElementById('post-category').value.trim();
-            const content = document.getElementById('post-content').value.trim();
+            // استخراج محتوا از ادیتور پیشرفته
+            const content = document.getElementById('post-content').innerHTML.trim();
             const btn = document.getElementById('submit-btn');
 
-            if (!title || !content) return showToast('لطفاً عنوان و متن مطلب را وارد کنید.', true);
+            if (!title || !content || content === '<br>') return showToast('لطفاً عنوان و متن مطلب را وارد کنید.', true);
 
             btn.disabled = true; btn.innerText = 'در حال ذخیره...';
 
@@ -263,9 +370,13 @@
                 showToast('خطا در آپلود عکس: ' + uploadError.message, true);
             } else {
                 const { data } = _supabase.storage.from('post_images').getPublicUrl(filePath);
-                const imgTag = `<br><img src="${data.publicUrl}" alt="تصویر پست" style="max-width:100%; border-radius:8px;"><br>`;
-                document.getElementById('post-content').value += imgTag;
-                showToast('عکس با موفقیت به متن اضافه شد! (این عکس به عنوان کاور هم شناخته می‌شود)');
+                const imgTag = `<img src="${data.publicUrl}" alt="تصویر پست"><br>`;
+                
+                // قرار دادن عکس در محیط ویرایشگر و فوکوس کردن
+                document.getElementById('post-content').focus();
+                document.execCommand('insertHTML', false, imgTag);
+                
+                showToast('عکس با موفقیت به متن اضافه شد! (اولین عکس به عنوان کاور شناخته می‌شود)');
                 fileInput.value = ''; 
             }
         }
@@ -286,6 +397,8 @@
             await _supabase.auth.signOut();
             window.location.href = 'login.html';
         }
+        
+        function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
 
         checkAuth();
     </script>
