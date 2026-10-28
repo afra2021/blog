@@ -18,7 +18,6 @@
         
         .live-clock { font-size: 0.9rem; color: var(--accent-color); background: var(--card-bg); padding: 6px 15px; border-radius: 15px; border: 1px solid var(--border-color); direction: rtl; font-weight: bold; display: flex; align-items: center; gap: 5px;}
         
-        /* استایل آیکون‌های حرفه‌ای SVG */
         svg.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
         .icon-heart { stroke: #ff4c4c; }
         
@@ -31,12 +30,18 @@
         .admin-btn { background: linear-gradient(45deg, var(--accent-color), #006b70); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; }
         .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,173,181,0.4); }
 
-        .main-layout { display: block; max-width: 850px; margin: 40px auto; padding: 0 20px; }
+        .main-layout { display: block; max-width: 850px; margin: 30px auto; padding: 0 20px; }
         
+        /* استایل دسته‌بندی‌های کپسولی */
+        .category-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 20px; scrollbar-width: none; }
+        .category-filters::-webkit-scrollbar { display: none; }
+        .cat-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 20px; border-radius: 25px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; white-space: nowrap; transition: 0.3s; }
+        .cat-pill:hover { border-color: var(--accent-color); }
+        .cat-pill.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* اصلاح ساختار کارت برای عکس کاور */
-        .post-card { background: var(--card-bg); border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease; overflow: hidden; }
+        .post-card { background: var(--card-bg); border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; overflow: hidden; }
         .post-card:hover { transform: translateY(-6px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
         
         .post-cover { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid var(--border-color); display: block; }
@@ -55,6 +60,12 @@
         .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.85; }
         
         #loading { text-align: center; color: #888; font-size: 1.1rem; }
+
+        /* استایل Toast (پاپ‌آپ اعلان شناور) */
+        #toast-container { position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+        .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.95rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.error { border-right-color: #ff4c4c; }
     </style>
 </head>
 <body>
@@ -77,13 +88,33 @@
     </header>
 
     <div class="main-layout">
+        <!-- نوار دسته‌بندی‌ها -->
+        <div id="category-filters" class="category-filters"></div>
+        
         <main class="content">
             <div id="loading">در حال دریافت مطالب...</div>
             <div id="posts-container"></div>
         </main>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
+        // سیستم پیام‌های پاپ‌آپ سفارشی (Toast)
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            const icon = isError ? `<svg class="icon" style="stroke:#ff4c4c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>` : `<svg class="icon" style="stroke:var(--accent-color)" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
         function updateClock() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -102,19 +133,21 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        window.addEventListener('pageshow', function(event) { if (event.persisted) loadPosts(); });
+        window.addEventListener('pageshow', function(event) { if (event.persisted) fetchAndLoadPosts(); });
 
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
-        // کدهای آیکون‌های وکتور
         const iconHeart = `<svg class="icon icon-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
         const iconEye = `<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const iconComment = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`;
         const iconClock = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const iconCalendar = `<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
+        let allPostsData = [];
+        let allCommentsData = [];
 
         async function checkUserStatus() {
             const { data: { session } } = await _supabase.auth.getSession();
@@ -127,35 +160,73 @@
         }
         checkUserStatus();
 
-        async function loadPosts() {
+        async function fetchAndLoadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
-            const { data: commentsData } = await _supabase.from('comments').select('post_id');
-            const container = document.getElementById('posts-container');
+            const { data: comments } = await _supabase.from('comments').select('post_id');
             
-            if (error || !posts) return document.getElementById('loading').innerText = 'خطا در دریافت مطالب.';
+            if (error || !posts) {
+                document.getElementById('loading').innerText = 'خطا در دریافت مطالب.';
+                showToast('خطا در ارتباط با سرور', true);
+                return;
+            }
+            
+            allPostsData = posts;
+            allCommentsData = comments || [];
             document.getElementById('loading').style.display = 'none';
-            container.innerHTML = ''; 
+            
+            buildCategories();
+            renderPosts('all');
+        }
 
+        function buildCategories() {
+            const filterContainer = document.getElementById('category-filters');
+            // استخراج دسته‌بندی‌های یکتا از کل پست‌ها
+            const categories = [...new Set(allPostsData.map(p => p.category).filter(c => c && c.trim() !== ''))];
+            
+            filterContainer.innerHTML = `<button class="cat-pill active" onclick="filterCategory('all', this)">🔥 همه مطالب</button>`;
+            categories.forEach(cat => {
+                filterContainer.innerHTML += `<button class="cat-pill" onclick="filterCategory('${escapeHtml(cat)}', this)">${escapeHtml(cat)}</button>`;
+            });
+        }
+
+        function filterCategory(cat, btnElement) {
+            document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderPosts(cat);
+        }
+
+        function renderPosts(filterCategory) {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            
             let commentCounts = {};
-            if (commentsData) commentsData.forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
+            allCommentsData.forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
 
-            posts.forEach((post, index) => {
+            const filteredPosts = filterCategory === 'all' 
+                ? allPostsData 
+                : allPostsData.filter(p => p.category === filterCategory);
+
+            if (filteredPosts.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888;">مطلبی در این دسته یافت نشد.</p>';
+                return;
+            }
+
+            filteredPosts.forEach((post, index) => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
                 const author = post.author_name || 'ناشناس';
                 const avatarUrl = post.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
-                const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
+                const categoryBadge = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
                 
-                // استخراج اولین عکس از محتوای پست برای کاور
                 let firstImg = tempDiv.querySelector('img');
                 let coverHtml = firstImg ? `<img src="${firstImg.src}" class="post-cover" alt="کاور مطلب">` : '';
 
                 let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
                 let excerpt = textContent.substring(0, 150) + '...';
                 
-                const readTime = Math.ceil(textContent.split(' ').length / 200);
+                const readTime = Math.max(1, Math.ceil(textContent.split(' ').length / 200));
                 const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
                 const cardHTML = `
@@ -175,7 +246,7 @@
                                     <span class="stat-item">${iconComment} ${commentCounts[post.id] || 0}</span>
                                 </div>
                             </div>
-                            ${category}
+                            ${categoryBadge}
                             <h2 class="post-title">${escapeHtml(post.title)}</h2>
                             <div class="post-excerpt">${excerpt}</div>
                         </div>
@@ -184,8 +255,10 @@
                 container.innerHTML += cardHTML;
             });
         }
+        
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
-        loadPosts();
+        
+        fetchAndLoadPosts();
     </script>
 </body>
 </html>
