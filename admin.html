@@ -2,317 +2,291 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل انتشار - Real Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>پنل مدیریت - Real Blog</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
         [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 20px; transition: 0.4s; }
-        .container { max-width: 900px; margin: 0 auto; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s; -webkit-tap-highlight-color: transparent; }
         
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
-        .header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        svg.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
         
-        .user-badge { display: flex; align-items: center; gap: 10px; background: var(--border-color); padding: 6px 15px; border-radius: 20px; color: var(--accent-color); font-size: 0.9rem; font-weight: bold; }
-        .user-badge img { width: 25px; height: 25px; border-radius: 50%; background: #222; object-fit: cover; }
+        header { background-color: var(--bg-color); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.4s; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; }
+        .header-title span { color: var(--accent-color); }
+        .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .theme-toggle { background: none; border: none; cursor: pointer; transition: 0.3s; padding: 0; color: var(--text-color); }
+        .theme-toggle:hover { transform: rotate(20deg) scale(1.15); color: var(--accent-color); }
+        .admin-btn { background: linear-gradient(45deg, #555, #333); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; font-family: inherit;}
         
-        .btn { padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
-        .btn:hover { opacity: 0.8; }
-        .btn-logout { background: #cf6679; color: black; }
-        .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; padding: 0; margin-right: 10px; }
+        .main-layout { display: flex; gap: 30px; max-width: 1100px; margin: 30px auto; padding: 0 20px; align-items: flex-start; }
+        .editor-section { width: 60%; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .list-section { width: 40%; background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
         
-        .form-box { background: var(--card-bg); padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 1rem; box-sizing: border-box; }
+        textarea { height: 300px; resize: vertical; }
         
-        .profile-box { background: rgba(0, 173, 181, 0.05); padding: 20px; border-radius: 10px; border: 1px dashed var(--accent-color); display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
-        .profile-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        .profile-row label { min-width: 130px; font-weight: bold; font-size: 0.95rem; }
-        .profile-box input[type="text"] { margin: 0; padding: 10px; flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-family: inherit; }
-        .profile-box input[type="file"] { margin: 0; padding: 8px; flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-family: inherit; cursor: pointer; }
-        .btn-save-name { background: var(--accent-color); color: white; padding: 10px 20px; align-self: flex-start; }
+        .file-upload-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: rgba(0, 173, 181, 0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent-color); }
+        .file-upload-wrapper input[type="file"] { margin: 0; padding: 0; border: none; width: auto; background: transparent; }
+        
+        button.btn-primary { background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; width: 100%; font-size: 1.1rem; transition: 0.3s; }
+        button.btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .post-item { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .post-item:hover { border-color: var(--accent-color); transform: translateX(-5px); }
+        .post-item h4 { margin: 0 0 5px 0; font-size: 1rem; color: var(--accent-color); }
+        .post-item-actions { display: flex; gap: 8px; }
+        .btn-small { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.8rem; color: white; display: flex; align-items: center; gap: 4px;}
+        .btn-edit { background: var(--accent-color); }
+        .btn-delete { background: #ff4c4c; }
 
-        .stats-dashboard { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-        .stat-box { background: var(--card-bg); flex: 1; min-width: 180px; padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
-        .stat-box:hover { transform: translateY(-5px); border-color: var(--accent-color); }
-        .stat-box h4 { margin: 0 0 15px 0; color: var(--text-color); opacity: 0.8; font-size: 1.1rem; }
-        .stat-box span { font-size: 2.5rem; font-weight: 900; color: var(--accent-color); display: block; }
+        /* Toast & Modal */
+        #toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+        .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.9rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.error { border-right-color: #ff4c4c; }
 
-        input, select { width: 100%; padding: 14px; margin-bottom: 18px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; font-family: inherit; box-sizing: border-box; font-size: 1rem; }
-        input::placeholder { color: #888; }
-        .btn-submit { background: var(--accent-color); color: white; width: 100%; font-size: 1.1rem; padding: 12px; margin-top: 20px; }
-        
-        .ql-toolbar { background: var(--bg-color); border-radius: 8px 8px 0 0; direction: ltr; border-color: var(--border-color) !important; }
-        .ql-container { background: var(--bg-color); border-radius: 0 0 8px 8px; border-color: var(--border-color) !important; min-height: 250px; }
-        .ql-editor { direction: rtl; text-align: right; color: var(--text-color); font-size: 1.05rem; line-height: 1.8; }
-        .ql-editor img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-box { background: var(--card-bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); text-align: center; transform: scale(0.9); transition: 0.3s; }
+        .modal-overlay.show .modal-box { transform: scale(1); }
+        .modal-msg { margin: 0 0 20px 0; font-size: 1.1rem; line-height: 1.6; }
+        .modal-actions { display: flex; justify-content: center; gap: 10px; }
+
+        @media (max-width: 768px) {
+            header { padding: 12px 15px; flex-direction: column; align-items: stretch; }
+            .header-left, .actions { justify-content: space-between; width: 100%; }
+            .main-layout { flex-direction: column; padding: 0 10px; }
+            .editor-section, .list-section { width: 100%; box-sizing: border-box; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h2 style="margin:0; color: var(--accent-color);">پنل مدیریت</h2>
-            <div class="header-actions">
-                <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☀️</button>
-                <span id="user-display" class="user-badge">...</span>
-                <a href="index.html" style="color: var(--accent-color); text-decoration:none; font-weight: bold;">← بازگشت به سایت</a>
-                <button class="btn btn-logout" onclick="logout()">خروج</button>
-            </div>
-        </header>
-
-        <div class="profile-box">
-            <div class="profile-row">
-                <label>نام نمایشی:</label>
-                <input type="text" id="display-name-input" placeholder="نامی که کاربران می‌بینند...">
-            </div>
-            <div class="profile-row">
-                <label>آپلود عکس پروفایل:</label>
-                <input type="file" id="avatar-file-input" accept="image/png, image/jpeg, image/jpg, image/gif">
-            </div>
-            <button class="btn btn-save-name" id="save-name-btn" onclick="updateProfile()">ذخیره تنظیمات پروفایل</button>
-        </div>
-
-        <div id="admin-stats-dashboard" class="stats-dashboard" style="display: none;">
-            <div class="stat-box">
-                <h4>📝 کل مطالب سایت</h4>
-                <span id="stat-posts">...</span>
-            </div>
-            <div class="stat-box">
-                <h4>💬 کل نظرات سایت</h4>
-                <span id="stat-comments">...</span>
-            </div>
-            <div class="stat-box">
-                <h4>❤️ مجموع لایک‌ها</h4>
-                <span id="stat-likes">...</span>
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <p class="modal-msg" id="modal-msg">آیا مطمئن هستید؟</p>
+            <div class="modal-actions">
+                <button id="modal-yes" class="btn-small btn-delete">بله، مطمئنم</button>
+                <button id="modal-no" class="btn-small" style="background:#555;">لغو</button>
             </div>
         </div>
+    </div>
+    <div id="toast-container"></div>
 
-        <div class="form-box">
-            <h3 id="form-title" style="margin-top: 0;">نوشتن پست جدید</h3>
-            
-            <input type="text" id="post-title" placeholder="عنوان پست خود را بنویسید...">
-            
-            <select id="post-category" onchange="toggleCustomCategory()">
-                <option value="">یک دسته‌بندی انتخاب کنید...</option>
-                <option value="تکنولوژی">تکنولوژی</option>
-                <option value="برنامه‌نویسی">برنامه‌نویسی</option>
-                <option value="روزمره">روزمره</option>
-                <option value="آموزشی">آموزشی</option>
-                <option value="custom">سفارشی (نوشتن دسته‌بندی جدید)...</option>
-            </select>
-            <input type="text" id="custom-category" placeholder="نام دسته‌بندی خود را بنویسید..." style="display:none;">
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="header-title">Real <span>Blog</span></a>
+        </div>
+        <div class="actions">
+            <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
+                <svg class="icon" style="width:22px; height:22px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+            <button onclick="logout()" class="admin-btn">خروج از حساب</button>
+            <a href="index.html" class="admin-btn" style="background: var(--accent-color);">مشاهده سایت</a>
+        </div>
+    </header>
 
-            <div id="editor-container"></div>
-            <button class="btn btn-submit" id="submit-btn" onclick="savePost()">انتشار پست</button>
+    <div class="main-layout" id="app-content" style="display: none;">
+        <div class="editor-section">
+            <h2 id="editor-title" style="margin-top:0; color:var(--accent-color);">نوشتن مطلب جدید</h2>
+            <input type="text" id="post-title" placeholder="عنوان مطلب را اینجا بنویسید...">
+            <input type="text" id="post-category" placeholder="دسته‌بندی (مثلاً: روزمره، تکنولوژی، آموزشی)">
+            
+            <div class="file-upload-wrapper">
+                <label>عکس پست/کاور:</label>
+                <input type="file" id="post-image" accept="image/*">
+                <button type="button" class="btn-small" onclick="uploadImage()" style="background:var(--accent-color);">آپلود عکس در متن</button>
+            </div>
+
+            <textarea id="post-content" placeholder="متن کامل مطلب شما... (از تگ‌های HTML می‌توانید استفاده کنید)"></textarea>
+            <button class="btn-primary" onclick="savePost()" id="submit-btn">انتشار مطلب</button>
+        </div>
+
+        <div class="list-section">
+            <h3 style="margin-top:0; border-bottom:2px solid var(--accent-color); padding-bottom:10px;">مطالب من</h3>
+            <div id="my-posts-list">در حال دریافت...</div>
         </div>
     </div>
 
     <script>
-        const themeBtn = document.getElementById('theme-btn');
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            const icon = isError ? `<svg class="icon" style="stroke:#ff4c4c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>` : `<svg class="icon" style="stroke:var(--accent-color)" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+        }
+
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                document.getElementById('modal-msg').innerText = message;
+                modal.classList.add('show');
+                document.getElementById('modal-yes').onclick = function() { modal.classList.remove('show'); resolve(true); };
+                document.getElementById('modal-no').onclick = function() { modal.classList.remove('show'); resolve(false); };
+            });
+        }
+
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        themeBtn.innerText = savedTheme === 'dark' ? '☀️' : '🌙';
-
         function toggleTheme() {
             const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            themeBtn.innerText = newTheme === 'dark' ? '☀️' : '🌙';
         }
 
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         
-        // سیستم هندلینگ هوشمند آپلود تصویر در ادیتور
-        const quill = new Quill('#editor-container', { 
-            theme: 'snow', 
-            placeholder: 'متن پست...', 
-            modules: { 
-                toolbar: {
-                    container: [['bold', 'italic'], [{'color':[]}], ['link', 'image', 'clean']],
-                    handlers: { image: imageHandler }
-                }
-            }
-        });
-
-        function imageHandler() {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
-            input.click();
-
-            input.onchange = async () => {
-                const file = input.files[0];
-                if (file) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-                    
-                    const range = quill.getSelection(true);
-                    quill.insertText(range.index, '... در حال آپلود تصویر در سرور ...', { color: '#00adb5' });
-
-                    const { data, error } = await _supabase.storage.from('post_images').upload(fileName, file, { cacheControl: '3600' });
-                    
-                    quill.deleteText(range.index, 33); // حذف متن انتظار
-
-                    if (error) {
-                        alert('خطا در آپلود تصویر: ' + error.message);
-                    } else {
-                        const { data: { publicUrl } } = _supabase.storage.from('post_images').getPublicUrl(fileName);
-                        quill.insertEmbed(range.index, 'image', publicUrl);
-                    }
-                }
-            };
-        }
-        
-        let currentUser = null; 
-        let currentUsername = '';
-        let currentAvatar = '';
-        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const editPostId = urlParams.get('edit');
-
-        function toggleCustomCategory() {
-            const select = document.getElementById('post-category');
-            const customInput = document.getElementById('custom-category');
-            customInput.style.display = select.value === 'custom' ? 'block' : 'none';
-        }
+        let currentUser = null;
+        let editingPostId = null;
 
         async function checkAuth() {
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) return window.location.href = 'login.html';
-            
-            currentUser = session.user;
-            
-            currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
-            if (!currentUsername) {
-                currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
-            }
-            
-            currentAvatar = currentUser.user_metadata?.avatar_url || '';
-            const displayAvatar = currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}`;
-            
-            document.getElementById('user-display').innerHTML = `<img src="${displayAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
-            document.getElementById('display-name-input').value = currentUsername;
-
-            if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-                document.getElementById('admin-stats-dashboard').style.display = 'flex';
-                loadAdminStats();
-            }
-
-            if (editPostId) {
-                loadPostForEdit();
+            if (!session) {
+                window.location.href = 'login.html';
+            } else {
+                currentUser = session.user;
+                document.getElementById('app-content').style.display = 'flex';
+                loadMyPosts();
+                checkEditMode();
             }
         }
 
-        async function loadAdminStats() {
-            const { data: posts, count: postsCount } = await _supabase.from('posts').select('likes', { count: 'exact' });
-            let totalLikes = 0;
-            if (posts) totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
-            const { count: commentsCount } = await _supabase.from('comments').select('*', { count: 'exact', head: true });
+        async function loadMyPosts() {
+            const { data: posts, error } = await _supabase.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            const listDiv = document.getElementById('my-posts-list');
+            
+            if (error) return listDiv.innerText = 'خطا در بارگذاری مطالب.';
+            if (!posts || posts.length === 0) return listDiv.innerHTML = '<p style="color:#888;">شما هنوز مطلبی منتشر نکرده‌اید.</p>';
 
-            document.getElementById('stat-posts').innerText = postsCount || 0;
-            document.getElementById('stat-comments').innerText = commentsCount || 0;
-            document.getElementById('stat-likes').innerText = totalLikes;
+            listDiv.innerHTML = '';
+            posts.forEach(post => {
+                const date = new Date(post.created_at).toLocaleDateString('fa-IR');
+                listDiv.innerHTML += `
+                    <div class="post-item">
+                        <div>
+                            <h4>${post.title}</h4>
+                            <span style="font-size:0.8rem; color:#888;">📅 ${date} | ❤️ ${post.likes || 0}</span>
+                        </div>
+                        <div class="post-item-actions">
+                            <button class="btn-small btn-edit" onclick="window.location.href='admin.html?edit=${post.id}'">✏️ ویرایش</button>
+                            <button class="btn-small btn-delete" onclick="deletePost('${post.id}')">🗑️ حذف</button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        async function loadPostForEdit() {
-            document.getElementById('submit-btn').innerText = 'در حال دریافت اطلاعات پست...';
-            document.getElementById('submit-btn').disabled = true;
-
-            const { data, error } = await _supabase.from('posts').select('*').eq('id', editPostId).single();
-            if (error || !data) return window.location.href = 'admin.html';
-
-            if (currentUser.id !== data.user_id && currentUser.email !== ADMIN_EMAIL) {
-                alert('شما اجازه ویرایش این مطلب را ندارید.');
-                return window.location.href = 'index.html';
+        function checkEditMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            editingPostId = urlParams.get('edit');
+            if (editingPostId) {
+                document.getElementById('editor-title').innerText = 'ویرایش مطلب';
+                document.getElementById('submit-btn').innerText = 'ذخیره تغییرات';
+                loadPostForEdit(editingPostId);
             }
-
-            document.getElementById('form-title').innerText = 'ویرایش پست ✏️';
-            document.getElementById('post-title').value = data.title;
-            
-            const catSelect = document.getElementById('post-category');
-            const options = Array.from(catSelect.options).map(o => o.value);
-            if (options.includes(data.category)) {
-                catSelect.value = data.category;
-            } else if(data.category) {
-                catSelect.value = 'custom';
-                document.getElementById('custom-category').style.display = 'block';
-                document.getElementById('custom-category').value = data.category;
-            }
-            
-            quill.root.innerHTML = data.content;
-            document.getElementById('submit-btn').innerText = 'بروزرسانی مطلب';
-            document.getElementById('submit-btn').disabled = false;
         }
 
-        async function updateProfile() {
-            const newName = document.getElementById('display-name-input').value.trim();
-            const avatarFile = document.getElementById('avatar-file-input').files[0];
-            
-            if (!newName) return alert('نام نمایشی نمی‌تواند خالی باشد.');
-            const btn = document.getElementById('save-name-btn');
-            btn.innerText = 'در حال آپلود و بروزرسانی...';
-            btn.disabled = true;
-
-            let newAvatarUrl = currentAvatar;
-
-            if (avatarFile) {
-                const fileExt = avatarFile.name.split('.').pop();
-                const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-                const { data: uploadData, error: uploadError } = await _supabase.storage.from('avatars').upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
-
-                if (uploadError) {
-                    alert('خطا در آپلود عکس: ' + uploadError.message);
-                    btn.innerText = 'ذخیره تنظیمات پروفایل';
-                    btn.disabled = false;
-                    return;
-                }
-                const { data: { publicUrl } } = _supabase.storage.from('avatars').getPublicUrl(fileName);
-                newAvatarUrl = publicUrl;
+        async function loadPostForEdit(id) {
+            const { data, error } = await _supabase.from('posts').select('*').eq('id', id).single();
+            if (data) {
+                document.getElementById('post-title').value = data.title;
+                document.getElementById('post-category').value = data.category || '';
+                document.getElementById('post-content').value = data.content;
+            } else {
+                showToast('خطا در لود مطلب', true);
             }
-
-            const { error } = await _supabase.auth.updateUser({ data: { display_name: newName, avatar_url: newAvatarUrl } });
-            if (error) { alert('خطا در ذخیره: ' + error.message); btn.disabled = false; return; }
-
-            await _supabase.from('posts').update({ author_name: newName, avatar_url: newAvatarUrl }).eq('user_id', currentUser.id);
-            await _supabase.from('comments').update({ author_name: newName, avatar_url: newAvatarUrl }).eq('author_name', currentUsername);
-
-            alert('پروفایل شما با موفقیت ذخیره شد!');
-            document.getElementById('avatar-file-input').value = '';
-            btn.innerText = 'ذخیره تنظیمات پروفایل';
-            btn.disabled = false;
-            currentUsername = newName; currentAvatar = newAvatarUrl;
-            document.getElementById('user-display').innerHTML = `<img src="${currentAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
         }
 
         async function savePost() {
             const title = document.getElementById('post-title').value.trim();
-            const content = quill.root.innerHTML.trim();
-            const selectCat = document.getElementById('post-category').value;
-            const customCat = document.getElementById('custom-category').value.trim();
-            const finalCategory = selectCat === 'custom' ? customCat : selectCat;
+            const category = document.getElementById('post-category').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            const btn = document.getElementById('submit-btn');
 
-            if (!title) return alert('عنوان پست الزامی است.');
-            document.getElementById('submit-btn').disabled = true;
+            if (!title || !content) return showToast('لطفاً عنوان و متن مطلب را وارد کنید.', true);
 
-            if (editPostId) {
-                const { error } = await _supabase.from('posts').update({ title, content, category: finalCategory }).eq('id', editPostId);
-                if (error) { alert('خطا در ویرایش: ' + error.message); document.getElementById('submit-btn').disabled = false; } 
-                else { window.location.href = `post.html?id=${editPostId}`; }
+            btn.disabled = true; btn.innerText = 'در حال ذخیره...';
+
+            let authorName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
+            if(!authorName) authorName = currentUser.email.split('@')[0];
+            const authorAvatar = currentUser.user_metadata?.avatar_url || '';
+
+            const postData = {
+                title: title,
+                content: content,
+                category: category,
+                user_id: currentUser.id,
+                author_email: currentUser.email,
+                author_name: authorName,
+                avatar_url: authorAvatar
+            };
+
+            let error;
+            if (editingPostId) {
+                const { error: updateErr } = await _supabase.from('posts').update(postData).eq('id', editingPostId);
+                error = updateErr;
             } else {
-                const { error } = await _supabase.from('posts').insert([{ 
-                    title, content, category: finalCategory, user_id: currentUser.id, 
-                    author_name: currentUsername, author_email: currentUser.email, avatar_url: currentAvatar 
-                }]);
-                if (error) { alert('خطا در انتشار: ' + error.message); document.getElementById('submit-btn').disabled = false; } 
-                else { window.location.href = 'index.html'; }
+                const { error: insertErr } = await _supabase.from('posts').insert([postData]);
+                error = insertErr;
+            }
+
+            if (error) {
+                showToast('خطا در ذخیره مطلب: ' + error.message, true);
+                btn.disabled = false; btn.innerText = editingPostId ? 'ذخیره تغییرات' : 'انتشار مطلب';
+            } else {
+                showToast(editingPostId ? 'تغییرات با موفقیت ذخیره شد!' : 'مطلب شما منتشر شد!');
+                setTimeout(() => window.location.href = 'index.html', 1500);
             }
         }
 
-        async function logout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
+        async function uploadImage() {
+            const fileInput = document.getElementById('post-image');
+            const file = fileInput.files[0];
+            if (!file) return showToast('لطفاً ابتدا یک عکس انتخاب کنید.', true);
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${currentUser.id}/${fileName}`;
+
+            showToast('در حال آپلود عکس...');
+            const { error: uploadError } = await _supabase.storage.from('post_images').upload(filePath, file);
+
+            if (uploadError) {
+                showToast('خطا در آپلود عکس: ' + uploadError.message, true);
+            } else {
+                const { data } = _supabase.storage.from('post_images').getPublicUrl(filePath);
+                const imgTag = `<br><img src="${data.publicUrl}" alt="تصویر پست" style="max-width:100%; border-radius:8px;"><br>`;
+                document.getElementById('post-content').value += imgTag;
+                showToast('عکس با موفقیت به متن اضافه شد! (این عکس به عنوان کاور هم شناخته می‌شود)');
+                fileInput.value = ''; 
+            }
+        }
+
+        async function deletePost(id) {
+            if(await showConfirm('آیا از حذف این مطلب مطمئن هستید؟')) {
+                const { error } = await _supabase.from('posts').delete().eq('id', id);
+                if (!error) {
+                    showToast('مطلب با موفقیت حذف شد.');
+                    loadMyPosts();
+                } else {
+                    showToast('خطا در حذف مطلب', true);
+                }
+            }
+        }
+
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'login.html';
+        }
+
         checkAuth();
     </script>
 </body>
