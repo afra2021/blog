@@ -13,9 +13,16 @@
         .container { max-width: 800px; margin: 20px auto; background: var(--card-bg); padding: 35px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
         .post-title { font-size: 2.2rem; color: var(--accent-color); margin-top: 0; }
-        .post-meta { color: #888; font-size: 0.95rem; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px; align-items: center; }
+        
+        .post-meta-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+        .post-meta { color: #888; font-size: 0.95rem; display: flex; gap: 20px; align-items: center; }
         .author-badge { display: flex; align-items: center; gap: 10px; background: rgba(0,173,181,0.1); padding: 5px 12px; border-radius: 20px; color: var(--accent-color); font-weight: bold; }
         .avatar-img { width: 30px; height: 30px; border-radius: 50%; background: #222; object-fit: cover; }
+        
+        .like-btn { background: rgba(255, 76, 76, 0.1); color: #ff4c4c; border: 1px solid #ff4c4c; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+        .like-btn:hover { background: #ff4c4c; color: white; transform: scale(1.05); }
+        .like-btn.liked { background: #ff4c4c; color: white; }
+
         .post-content { line-height: 1.9; font-size: 1.1rem; }
         .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
@@ -53,10 +60,17 @@
         </div>
 
         <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
-        <div class="post-meta">
-            <div id="p-author" class="author-badge">...</div>
-            <span id="p-cat">📁 ...</span>
+        
+        <div class="post-meta-container">
+            <div class="post-meta">
+                <div id="p-author" class="author-badge">...</div>
+                <span id="p-cat">📁 ...</span>
+            </div>
+            <button id="like-btn" class="like-btn" onclick="likePost()">
+                ❤️ <span id="like-count">0</span>
+            </button>
         </div>
+
         <div class="post-content" id="p-content"></div>
 
         <div class="comments-section">
@@ -93,6 +107,8 @@
         let currentUsername = '';
         let currentAvatar = '';
         let isAdmin = false;
+        let currentLikes = 0;
+        let hasLiked = false;
 
         async function initPage() {
             if (!postId) return document.getElementById('p-title').innerText = 'پست پیدا نشد!';
@@ -125,15 +141,38 @@
 
             const author = data.author_name || 'ناشناس';
             const avatarUrl = data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+            
+            currentLikes = data.likes || 0;
 
             document.getElementById('p-title').innerText = data.title;
             document.getElementById('p-author').innerHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
             document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
             document.getElementById('p-content').innerHTML = data.content;
+            document.getElementById('like-count').innerText = currentLikes;
 
-            // نمایش پنل مدیریت/ویرایش برای نویسنده اصلی یا مدیر سایت
             if (currentUser && (isAdmin || currentUser.id === data.user_id)) {
                 document.getElementById('admin-panel').style.display = 'flex';
+            }
+        }
+
+        async function likePost() {
+            if (hasLiked) return; // جلوگیری از اسپم لایک
+            
+            hasLiked = true;
+            currentLikes++;
+            const btn = document.getElementById('like-btn');
+            document.getElementById('like-count').innerText = currentLikes;
+            btn.classList.add('liked');
+
+            // آپدیت لایک در دیتابیس
+            const { error } = await _supabase.from('posts').update({ likes: currentLikes }).eq('id', postId);
+            
+            if (error) {
+                currentLikes--;
+                document.getElementById('like-count').innerText = currentLikes;
+                btn.classList.remove('liked');
+                hasLiked = false;
+                alert('خطا در ثبت لایک، لطفاً دوباره تلاش کنید.');
             }
         }
 
