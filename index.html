@@ -7,14 +7,8 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
-            --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(26, 26, 26, 0.95);
-        }
-        [data-theme="light"] {
-            --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff;
-            --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(255, 255, 255, 0.95);
-        }
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(26, 26, 26, 0.95); }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(255, 255, 255, 0.95); }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
         
         header { background-color: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
@@ -22,8 +16,8 @@
         .header-title span { color: var(--accent-color); }
         
         .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-        .auth-box { display: flex; align-items: center; gap: 10px; background: var(--card-bg); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 0.9rem; }
-        .auth-avatar { width: 28px; height: 28px; border-radius: 50%; background: #333; }
+        .auth-box { display: flex; align-items: center; gap: 10px; background: var(--card-bg); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 0.9rem; font-weight: bold; }
+        .auth-avatar { width: 28px; height: 28px; border-radius: 50%; background: #333; object-fit: cover; }
         
         .theme-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.3s; padding: 0; }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.15); }
@@ -43,11 +37,10 @@
         .post-title { margin: 0 0 10px 0; font-size: 1.5rem; color: var(--accent-color); }
         .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; }
         .author-info { display: flex; align-items: center; gap: 8px; }
-        .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; }
+        .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; object-fit: cover; }
+        .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
         
         #loading { text-align: center; color: #888; font-size: 1.1rem; }
-        
-        /* دکمه رفتن به بالا */
         #scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent-color); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; z-index: 1000; }
         #scroll-top-btn:hover { background: #008c93; transform: translateY(-3px); }
         
@@ -61,7 +54,7 @@
         <div class="actions">
             <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">☀️</button>
             <div id="auth-status"></div>
-            <a href="login.html" class="admin-btn">پنل انتشار</a>
+            <a href="login.html" class="admin-btn">پنل مدیریت</a>
         </div>
     </header>
 
@@ -92,7 +85,6 @@
             themeBtn.innerText = newTheme === 'dark' ? '☀️' : '🌙';
         }
 
-        // نمایش دکمه اسکرول
         window.onscroll = function() {
             const scrollBtn = document.getElementById('scroll-top-btn');
             if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) scrollBtn.style.display = "block";
@@ -105,15 +97,15 @@
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
-        // بررسی لاگین بودن کاربر برای نمایش در هدر
         async function checkUserStatus() {
             const { data: { session } } = await _supabase.auth.getSession();
             const authDiv = document.getElementById('auth-status');
             if (session) {
                 let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username;
-                if (!name) name = session.user.email === ADMIN_EMAIL ? 'مدیر سایت' : 'کاربر';
-                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
-                authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar"> <span>${name}</span></div>`;
+                if (!name) name = session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : session.user.email.split('@')[0];
+                
+                let avatar = session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
+                authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
             }
         }
         checkUserStatus();
@@ -127,13 +119,12 @@
             if (error || !posts) return loading.innerText = 'خطا در دریافت مطالب.';
             loading.style.display = 'none';
             container.innerHTML = ''; adminContainer.innerHTML = '';
-
             let adminPostCount = 0;
 
             posts.forEach((post, index) => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
                 const author = post.author_name || 'ناشناس';
-                const avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
+                const avatarUrl = post.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const category = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
                 
                 let tempDiv = document.createElement('div');
@@ -147,7 +138,7 @@
                         ${category}
                         <h2 class="post-title">${escapeHtml(post.title)}</h2>
                         <div class="post-meta">
-                            <span class="author-info"><img src="${avatar}" class="post-avatar"> ${escapeHtml(author)}</span>
+                            <span class="author-info"><img src="${avatarUrl}" class="post-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}</span>
                             <span>📅 ${date}</span>
                         </div>
                         <div class="post-excerpt">${excerpt}</div>
