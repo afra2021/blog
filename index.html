@@ -7,12 +7,12 @@
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(18, 18, 18, 0.7); }
-        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(244, 244, 249, 0.7); }
+        :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; --header-bg: rgba(18, 18, 18, 0.35); }
+        [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; --header-bg: rgba(244, 244, 249, 0.4); }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; }
         
-        /* استایل شیشه‌ای هدر */
-        header { background: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* افکت شیشه‌ای واقعی و شفاف */
+        header { background: var(--header-bg); padding: 15px 30px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .header-left { display: flex; align-items: center; gap: 20px; }
         .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
@@ -33,7 +33,6 @@
         .sidebar h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-bottom: 15px; }
         .content { width: 70%; }
 
-        /* سایدبار مطالب محبوب (مینیمال) */
         .minimal-post { padding: 12px 0; border-bottom: 1px dashed var(--border-color); cursor: pointer; transition: 0.3s; }
         .minimal-post:last-child { border-bottom: none; }
         .minimal-post:hover { transform: translateX(-5px); color: var(--accent-color); }
@@ -42,7 +41,6 @@
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* افکت‌های ظریف هاور برای کارت‌ها */
         .post-card { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease; }
         .post-card:hover { transform: translateY(-6px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
         .post-card-content { cursor: pointer; }
@@ -56,7 +54,6 @@
         .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; object-fit: cover; }
         
         .stat-icons { display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 15px; }
-        
         .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.9; }
         
         #loading { text-align: center; color: #888; font-size: 1.1rem; }
@@ -142,7 +139,6 @@
 
         async function loadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
-            // دریافت کامنت‌ها برای محاسبه تعداد نظرات هر پست
             const { data: commentsData } = await _supabase.from('comments').select('post_id');
             
             const container = document.getElementById('posts-container');
@@ -153,7 +149,6 @@
             loading.style.display = 'none';
             container.innerHTML = ''; 
 
-            // شمارش نظرات
             let commentCounts = {};
             if (commentsData) {
                 commentsData.forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
@@ -170,12 +165,13 @@
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
-                let textContent = tempDiv.textContent || tempDiv.innerText;
+                // اصلاح محاسبه دقیق زمان مطالعه
+                let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
                 let excerpt = textContent.substring(0, 150) + '...';
                 
-                // محاسبه زمان مطالعه
-                const wordCount = textContent.trim().split(/\s+/).length;
-                const readTime = Math.max(1, Math.ceil(wordCount / 200));
+                const wordCount = textContent.split(' ').length;
+                const readTime = Math.ceil(wordCount / 200);
+                const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
                 const cardHTML = `
                     <div class="post-card" style="animation-delay: ${index * 0.05}s;">
@@ -185,7 +181,7 @@
                                 ${escapeHtml(author)}
                             </a>
                             <span>📅 ${date}</span>
-                            <span style="color:var(--accent-color);">⏱️ ${readTime} دقیقه</span>
+                            <span style="color:var(--accent-color);">⏱️ ${readTimeDisplay}</span>
                             <div class="stat-icons">
                                 <span>❤️ ${likes}</span>
                                 <span>👁️ ${views}</span>
@@ -202,7 +198,7 @@
                 container.innerHTML += cardHTML;
             });
 
-            // ساخت سایدبار مطالب محبوب
+            // سایدبار مطالب محبوب
             const popularPosts = [...posts].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
             popularContainer.innerHTML = '';
             popularPosts.forEach(p => {
