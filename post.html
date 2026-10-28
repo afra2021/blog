@@ -261,7 +261,6 @@
                 const date = new Date(c.created_at).toLocaleDateString('fa-IR');
                 const author = c.author_name || 'ناشناس';
                 const avatarUrl = c.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
-                // رفع باگ پاک کردن کامنت با قرار دادن کوتیشن در تابع
                 const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment('${c.id}')">حذف 🗑️</button>` : '';
                 
                 listDiv.innerHTML += `
@@ -289,7 +288,14 @@
 
         async function deleteComment(commentId) {
             if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
-                await _supabase.from('comments').delete().eq('id', commentId); loadComments();
+                const { error } = await _supabase.from('comments').delete().eq('id', commentId);
+                
+                if (error) {
+                    alert('خطا در حذف از دیتابیس: ' + error.message);
+                } else {
+                    alert('کامنت با موفقیت پاک شد!');
+                    loadComments();
+                }
             }
         }
 
