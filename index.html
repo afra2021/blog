@@ -104,9 +104,12 @@
         };
         function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
-        // اطمینان از آپدیت شدن لیست به محض بازگشت به این صفحه
-        window.addEventListener('pageshow', function() { loadPosts(); });
-        window.addEventListener('focus', function() { loadPosts(); });
+        // لود هوشمند مطالب: فقط هنگام لود اولیه یا بازگشت با دکمه بک مرورگر (جلوگیری از رفرش تکراری)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                loadPosts();
+            }
+        });
 
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
@@ -186,6 +189,8 @@
         }
 
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
+        
+        // اجرای لود اولیه فقط یک‌بار
         loadPosts();
     </script>
 </body>
