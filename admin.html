@@ -34,7 +34,6 @@
         .profile-box input[type="file"] { margin: 0; padding: 8px; flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-family: inherit; cursor: pointer; }
         .btn-save-name { background: var(--accent-color); color: white; padding: 10px 20px; align-self: flex-start; }
 
-        /* استایل‌های داشبورد آمار */
         .stats-dashboard { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
         .stat-box { background: var(--card-bg); flex: 1; min-width: 180px; padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
         .stat-box:hover { transform: translateY(-5px); border-color: var(--accent-color); }
@@ -48,6 +47,7 @@
         .ql-toolbar { background: var(--bg-color); border-radius: 8px 8px 0 0; direction: ltr; border-color: var(--border-color) !important; }
         .ql-container { background: var(--bg-color); border-radius: 0 0 8px 8px; border-color: var(--border-color) !important; min-height: 250px; }
         .ql-editor { direction: rtl; text-align: right; color: var(--text-color); font-size: 1.05rem; line-height: 1.8; }
+        .ql-editor img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -75,7 +75,6 @@
             <button class="btn btn-save-name" id="save-name-btn" onclick="updateProfile()">ذخیره تنظیمات پروفایل</button>
         </div>
 
-        <!-- داشبورد آمار (فقط برای مدیر نمایش داده می‌شود) -->
         <div id="admin-stats-dashboard" class="stats-dashboard" style="display: none;">
             <div class="stat-box">
                 <h4>📝 کل مطالب سایت</h4>
@@ -125,7 +124,47 @@
         }
 
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
-        const quill = new Quill('#editor-container', { theme: 'snow', placeholder: 'متن پست...', modules: { toolbar: [['bold', 'italic'], [{'color':[]}], ['link', 'image', 'clean']] }});
+        
+        // سیستم هندلینگ هوشمند آپلود تصویر در ادیتور
+        const quill = new Quill('#editor-container', { 
+            theme: 'snow', 
+            placeholder: 'متن پست...', 
+            modules: { 
+                toolbar: {
+                    container: [['bold', 'italic'], [{'color':[]}], ['link', 'image', 'clean']],
+                    handlers: { image: imageHandler }
+                }
+            }
+        });
+
+        function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (file) {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                    
+                    const range = quill.getSelection(true);
+                    quill.insertText(range.index, '... در حال آپلود تصویر در سرور ...', { color: '#00adb5' });
+
+                    const { data, error } = await _supabase.storage.from('post_images').upload(fileName, file, { cacheControl: '3600' });
+                    
+                    quill.deleteText(range.index, 33); // حذف متن انتظار
+
+                    if (error) {
+                        alert('خطا در آپلود تصویر: ' + error.message);
+                    } else {
+                        const { data: { publicUrl } } = _supabase.storage.from('post_images').getPublicUrl(fileName);
+                        quill.insertEmbed(range.index, 'image', publicUrl);
+                    }
+                }
+            };
+        }
         
         let currentUser = null; 
         let currentUsername = '';
@@ -158,7 +197,6 @@
             document.getElementById('user-display').innerHTML = `<img src="${displayAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
             document.getElementById('display-name-input').value = currentUsername;
 
-            // نمایش داشبورد آمار فقط برای مدیر
             if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                 document.getElementById('admin-stats-dashboard').style.display = 'flex';
                 loadAdminStats();
@@ -170,14 +208,9 @@
         }
 
         async function loadAdminStats() {
-            // دریافت اطلاعات پست‌ها و جمع‌زدن لایک‌ها
             const { data: posts, count: postsCount } = await _supabase.from('posts').select('likes', { count: 'exact' });
             let totalLikes = 0;
-            if (posts) {
-                totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
-            }
-            
-            // دریافت تعداد دقیق نظرات
+            if (posts) totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
             const { count: commentsCount } = await _supabase.from('comments').select('*', { count: 'exact', head: true });
 
             document.getElementById('stat-posts').innerText = postsCount || 0;
@@ -190,17 +223,11 @@
             document.getElementById('submit-btn').disabled = true;
 
             const { data, error } = await _supabase.from('posts').select('*').eq('id', editPostId).single();
-            
-            if (error || !data) {
-                alert('پست پیدا نشد!');
-                window.location.href = 'admin.html';
-                return;
-            }
+            if (error || !data) return window.location.href = 'admin.html';
 
             if (currentUser.id !== data.user_id && currentUser.email !== ADMIN_EMAIL) {
                 alert('شما اجازه ویرایش این مطلب را ندارید.');
-                window.location.href = 'index.html';
-                return;
+                return window.location.href = 'index.html';
             }
 
             document.getElementById('form-title').innerText = 'ویرایش پست ✏️';
@@ -217,7 +244,6 @@
             }
             
             quill.root.innerHTML = data.content;
-
             document.getElementById('submit-btn').innerText = 'بروزرسانی مطلب';
             document.getElementById('submit-btn').disabled = false;
         }
@@ -227,7 +253,6 @@
             const avatarFile = document.getElementById('avatar-file-input').files[0];
             
             if (!newName) return alert('نام نمایشی نمی‌تواند خالی باشد.');
-            
             const btn = document.getElementById('save-name-btn');
             btn.innerText = 'در حال آپلود و بروزرسانی...';
             btn.disabled = true;
@@ -237,10 +262,7 @@
             if (avatarFile) {
                 const fileExt = avatarFile.name.split('.').pop();
                 const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-
-                const { data: uploadData, error: uploadError } = await _supabase.storage
-                    .from('avatars')
-                    .upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
+                const { data: uploadData, error: uploadError } = await _supabase.storage.from('avatars').upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
 
                 if (uploadError) {
                     alert('خطا در آپلود عکس: ' + uploadError.message);
@@ -248,42 +270,21 @@
                     btn.disabled = false;
                     return;
                 }
-
-                const { data: { publicUrl } } = _supabase.storage
-                    .from('avatars')
-                    .getPublicUrl(fileName);
-                
+                const { data: { publicUrl } } = _supabase.storage.from('avatars').getPublicUrl(fileName);
                 newAvatarUrl = publicUrl;
             }
 
-            const { error } = await _supabase.auth.updateUser({
-                data: { display_name: newName, avatar_url: newAvatarUrl }
-            });
+            const { error } = await _supabase.auth.updateUser({ data: { display_name: newName, avatar_url: newAvatarUrl } });
+            if (error) { alert('خطا در ذخیره: ' + error.message); btn.disabled = false; return; }
 
-            if (error) {
-                alert('خطا در ذخیره: ' + error.message);
-                btn.innerText = 'ذخیره تنظیمات پروفایل';
-                btn.disabled = false;
-                return;
-            }
-
-            await _supabase.from('posts').update({ 
-                author_name: newName, 
-                avatar_url: newAvatarUrl 
-            }).eq('user_id', currentUser.id);
-
-            await _supabase.from('comments').update({ 
-                author_name: newName, 
-                avatar_url: newAvatarUrl 
-            }).eq('author_name', currentUsername);
+            await _supabase.from('posts').update({ author_name: newName, avatar_url: newAvatarUrl }).eq('user_id', currentUser.id);
+            await _supabase.from('comments').update({ author_name: newName, avatar_url: newAvatarUrl }).eq('author_name', currentUsername);
 
             alert('پروفایل شما با موفقیت ذخیره شد!');
             document.getElementById('avatar-file-input').value = '';
             btn.innerText = 'ذخیره تنظیمات پروفایل';
             btn.disabled = false;
-            
-            currentUsername = newName;
-            currentAvatar = newAvatarUrl;
+            currentUsername = newName; currentAvatar = newAvatarUrl;
             document.getElementById('user-display').innerHTML = `<img src="${currentAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
         }
 
@@ -292,36 +293,22 @@
             const content = quill.root.innerHTML.trim();
             const selectCat = document.getElementById('post-category').value;
             const customCat = document.getElementById('custom-category').value.trim();
-            
             const finalCategory = selectCat === 'custom' ? customCat : selectCat;
 
             if (!title) return alert('عنوان پست الزامی است.');
             document.getElementById('submit-btn').disabled = true;
 
             if (editPostId) {
-                const { error } = await _supabase.from('posts').update({ 
-                    title, content, category: finalCategory 
-                }).eq('id', editPostId);
-
-                if (error) {
-                    alert('خطا در ویرایش: ' + error.message);
-                    document.getElementById('submit-btn').disabled = false;
-                } else {
-                    window.location.href = `post.html?id=${editPostId}`;
-                }
+                const { error } = await _supabase.from('posts').update({ title, content, category: finalCategory }).eq('id', editPostId);
+                if (error) { alert('خطا در ویرایش: ' + error.message); document.getElementById('submit-btn').disabled = false; } 
+                else { window.location.href = `post.html?id=${editPostId}`; }
             } else {
                 const { error } = await _supabase.from('posts').insert([{ 
                     title, content, category: finalCategory, user_id: currentUser.id, 
-                    author_name: currentUsername, author_email: currentUser.email,
-                    avatar_url: currentAvatar 
+                    author_name: currentUsername, author_email: currentUser.email, avatar_url: currentAvatar 
                 }]);
-
-                if (error) {
-                    alert('خطا در انتشار: ' + error.message);
-                    document.getElementById('submit-btn').disabled = false;
-                } else {
-                    window.location.href = 'index.html';
-                }
+                if (error) { alert('خطا در انتشار: ' + error.message); document.getElementById('submit-btn').disabled = false; } 
+                else { window.location.href = 'index.html'; }
             }
         }
 
