@@ -97,7 +97,6 @@
             if (session) {
                 currentUser = session.user;
                 
-                // استخراج نام و آواتار بدون باگ «کاربر»
                 currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
                 if(!currentUsername) {
                     currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
@@ -166,7 +165,7 @@
             const { error } = await _supabase.from('comments').insert([{ 
                 post_id: postId, 
                 author_name: currentUsername, 
-                avatar_url: currentAvatar, // ذخیره آواتار کاستوم در جدول کامنت‌ها
+                avatar_url: currentAvatar,
                 content: text 
             }]);
 
