@@ -18,7 +18,7 @@
         .header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         
         .user-badge { display: flex; align-items: center; gap: 10px; background: var(--border-color); padding: 6px 15px; border-radius: 20px; color: var(--accent-color); font-size: 0.9rem; font-weight: bold; }
-        .user-badge img { width: 25px; height: 25px; border-radius: 50%; background: #222; }
+        .user-badge img { width: 25px; height: 25px; border-radius: 50%; background: #222; object-fit: cover; }
         
         .btn { padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
         .btn:hover { opacity: 0.8; }
@@ -29,8 +29,9 @@
         
         .profile-box { background: rgba(0, 173, 181, 0.05); padding: 20px; border-radius: 10px; border: 1px dashed var(--accent-color); display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .profile-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        .profile-row label { min-width: 120px; font-weight: bold; font-size: 0.95rem; }
-        .profile-box input { margin: 0; padding: 10px; flex: 1; min-width: 200px; }
+        .profile-row label { min-width: 130px; font-weight: bold; font-size: 0.95rem; }
+        .profile-box input[type="text"] { margin: 0; padding: 10px; flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-family: inherit; }
+        .profile-box input[type="file"] { margin: 0; padding: 8px; flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-family: inherit; cursor: pointer; }
         .btn-save-name { background: var(--accent-color); color: white; padding: 10px 20px; align-self: flex-start; }
 
         input, select { width: 100%; padding: 14px; margin-bottom: 18px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; font-family: inherit; box-sizing: border-box; font-size: 1rem; }
@@ -40,9 +41,6 @@
         .ql-toolbar { background: var(--bg-color); border-radius: 8px 8px 0 0; direction: ltr; border-color: var(--border-color) !important; }
         .ql-container { background: var(--bg-color); border-radius: 0 0 8px 8px; border-color: var(--border-color) !important; min-height: 250px; }
         .ql-editor { direction: rtl; text-align: right; color: var(--text-color); font-size: 1.05rem; line-height: 1.8; }
-        .ql-snow .ql-stroke { stroke: var(--text-color); }
-        .ql-snow .ql-fill { fill: var(--text-color); }
-        .ql-snow .ql-picker { color: var(--text-color); }
     </style>
 </head>
 <body>
@@ -58,17 +56,16 @@
             </div>
         </header>
 
-        <!-- این باکس اکنون شامل هر دو فیلد نام و آواتار است -->
         <div class="profile-box">
             <div class="profile-row">
                 <label>نام نمایشی:</label>
                 <input type="text" id="display-name-input" placeholder="نامی که کاربران می‌بینند...">
             </div>
             <div class="profile-row">
-                <label>لینک آواتار:</label>
-                <input type="url" id="avatar-url-input" placeholder="آدرس یک عکس از اینترنت (اختیاری)...">
+                <label>آپلود عکس پروفایل:</label>
+                <input type="file" id="avatar-file-input" accept="image/png, image/jpeg, image/jpg, image/gif">
             </div>
-            <button class="btn btn-save-name" id="save-name-btn" onclick="updateProfile()">ذخیره پروفایل</button>
+            <button class="btn btn-save-name" id="save-name-btn" onclick="updateProfile()">ذخیره تنظیمات پروفایل</button>
         </div>
 
         <div class="form-box">
@@ -134,29 +131,54 @@
             
             document.getElementById('user-display').innerHTML = `<img src="${displayAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${currentUsername}'"> نویسنده: ${currentUsername}`;
             document.getElementById('display-name-input').value = currentUsername;
-            document.getElementById('avatar-url-input').value = currentAvatar;
         }
 
         async function updateProfile() {
             const newName = document.getElementById('display-name-input').value.trim();
-            const newAvatar = document.getElementById('avatar-url-input').value.trim();
+            const avatarFile = document.getElementById('avatar-file-input').files[0];
+            
             if (!newName) return alert('نام نمایشی نمی‌تواند خالی باشد.');
             
             const btn = document.getElementById('save-name-btn');
-            btn.innerText = 'در حال ذخیره...';
+            btn.innerText = 'در حال آپلود و ذخیره...';
             btn.disabled = true;
 
+            let newAvatarUrl = currentAvatar;
+
+            if (avatarFile) {
+                const fileExt = avatarFile.name.split('.').pop();
+                const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('avatars')
+                    .upload(fileName, avatarFile, { cacheControl: '3600', upsert: true });
+
+                if (uploadError) {
+                    alert('خطا در آپلود عکس: ' + uploadError.message);
+                    btn.innerText = 'ذخیره تنظیمات پروفایل';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const { data: { publicUrl } } = _supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+                
+                newAvatarUrl = publicUrl;
+            }
+
             const { error } = await _supabase.auth.updateUser({
-                data: { display_name: newName, avatar_url: newAvatar }
+                data: { display_name: newName, avatar_url: newAvatarUrl }
             });
 
-            btn.innerText = 'ذخیره پروفایل';
+            btn.innerText = 'ذخیره تنظیمات پروفایل';
             btn.disabled = false;
 
             if (error) {
                 alert('خطا در ذخیره: ' + error.message);
             } else {
-                alert('پروفایل شما بروزرسانی شد!');
+                alert('پروفایل شما با موفقیت بروزرسانی شد!');
+                document.getElementById('avatar-file-input').value = '';
                 checkAuth();
             }
         }
