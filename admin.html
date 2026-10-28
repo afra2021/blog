@@ -140,7 +140,7 @@
             if (!newName) return alert('نام نمایشی نمی‌تواند خالی باشد.');
             
             const btn = document.getElementById('save-name-btn');
-            btn.innerText = 'در حال آپلود و بروزرسانی کل سایت...';
+            btn.innerText = 'در حال آپلود و بروزرسانی...';
             btn.disabled = true;
 
             let newAvatarUrl = currentAvatar;
@@ -167,7 +167,7 @@
                 newAvatarUrl = publicUrl;
             }
 
-            // ۱. آپدیت تنظیمات کاربر در سیستم لاگین
+            // ۱. آپدیت پروفایل
             const { error } = await _supabase.auth.updateUser({
                 data: { display_name: newName, avatar_url: newAvatarUrl }
             });
@@ -179,19 +179,19 @@
                 return;
             }
 
-            // ۲. آپدیت تمامی پست‌های قبلی این کاربر در دیتابیس
+            // ۲. آپدیت پست‌های قبلی بر اساس user_id (دقیق‌ترین روش)
             await _supabase.from('posts').update({ 
                 author_name: newName, 
                 avatar_url: newAvatarUrl 
-            }).eq('author_email', currentUser.email);
+            }).eq('user_id', currentUser.id);
 
-            // ۳. آپدیت تمامی کامنت‌های قبلی
+            // ۳. آپدیت کامنت‌های قبلی
             await _supabase.from('comments').update({ 
                 author_name: newName, 
                 avatar_url: newAvatarUrl 
             }).eq('author_name', currentUsername);
 
-            alert('پروفایل و تمام پست‌های قبلی شما با موفقیت بروزرسانی شد!');
+            alert('پروفایل شما با موفقیت ذخیره شد!');
             document.getElementById('avatar-file-input').value = '';
             btn.innerText = 'ذخیره تنظیمات پروفایل';
             btn.disabled = false;
