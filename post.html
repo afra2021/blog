@@ -19,8 +19,9 @@
         .post-content { line-height: 1.9; font-size: 1.1rem; }
         .post-content img { max-width: 100%; border-radius: 8px; margin: 15px 0; }
         
-        .admin-controls { background: rgba(255, 76, 76, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff4c4c; margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; }
+        .admin-controls { background: rgba(0, 173, 181, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-color); margin-bottom: 25px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .btn-delete { background: #ff4c4c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .btn-edit { background: var(--accent-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; }
 
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -44,8 +45,11 @@
         <a href="index.html" style="color: #888; text-decoration: none; display: inline-block; margin-bottom: 20px;">← بازگشت به صفحه اصلی</a>
         
         <div id="admin-panel" class="admin-controls">
-            <span style="color: #ff4c4c; font-weight: bold;">دسترسی مدیریت</span>
-            <button class="btn-delete" onclick="deleteThisPost()">حذف کامل این پست</button>
+            <span style="color: var(--accent-color); font-weight: bold;">پنل مدیریت مطلب</span>
+            <div>
+                <button class="btn-edit" onclick="editThisPost()">ویرایش مطلب ✏️</button>
+                <button class="btn-delete" onclick="deleteThisPost()">حذف 🗑️</button>
+            </div>
         </div>
 
         <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
@@ -108,7 +112,6 @@
                 
                 if (currentUser.email === ADMIN_EMAIL) {
                     isAdmin = true;
-                    document.getElementById('admin-panel').style.display = 'flex';
                 }
             }
 
@@ -127,6 +130,11 @@
             document.getElementById('p-author').innerHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
             document.getElementById('p-cat').innerHTML = data.category ? `📁 ${data.category}` : '📁 بدون دسته';
             document.getElementById('p-content').innerHTML = data.content;
+
+            // نمایش پنل مدیریت/ویرایش برای نویسنده اصلی یا مدیر سایت
+            if (currentUser && (isAdmin || currentUser.id === data.user_id)) {
+                document.getElementById('admin-panel').style.display = 'flex';
+            }
         }
 
         async function loadComments() {
@@ -176,17 +184,14 @@
             }
         }
 
+        function editThisPost() {
+            window.location.href = `admin.html?edit=${postId}`;
+        }
+
         async function deleteThisPost() {
             if(confirm('این مطلب برای همیشه حذف شود؟')) {
                 await _supabase.from('posts').delete().eq('id', postId);
                 window.location.href = 'index.html';
-            }
-        }
-
-        async function deleteComment(commentId) {
-            if(confirm('آیا از حذف این کامنت مطمئن هستید؟')) {
-                await _supabase.from('comments').delete().eq('id', commentId);
-                loadComments();
             }
         }
 
