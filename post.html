@@ -134,7 +134,6 @@
         let currentUser = null; let currentUsername = ''; let currentAvatar = '';
         let isAdmin = false; 
         
-        // متغیرهای ذخیره وضعیت لایک و لیست کاربران
         let currentLikes = 0; 
         let hasLiked = false;
         let likedUsersArray = [];
@@ -163,12 +162,10 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) return document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
 
-            // پردازش لیست بازدیدکنندگان و لایک‌کنندگان
             viewedUsersArray = data.viewed_users ? data.viewed_users.split(',') : [];
             likedUsersArray = data.liked_users ? data.liked_users.split(',') : [];
             let newViews = data.views || 0;
 
-            // اگر کاربر لاگین است و قبلاً این پست را ندیده، بازدید یکتا ثبت می‌شود
             if (currentUser && !viewedUsersArray.includes(currentUser.id)) {
                 viewedUsersArray.push(currentUser.id);
                 newViews++;
@@ -236,14 +233,12 @@
             }
             updateLikeUI();
             
-            // آپدیت تعداد لایک و لیست افراد لایک‌کننده در دیتابیس
             const { error } = await _supabase.from('posts').update({ 
                 likes: currentLikes,
                 liked_users: likedUsersArray.join(',')
             }).eq('id', postId);
             
             if (error) {
-                // برگشت به حالت قبل در صورت خطا
                 if (hasLiked) { currentLikes--; hasLiked = false; likedUsersArray.pop(); } 
                 else { currentLikes++; hasLiked = true; likedUsersArray.push(currentUser.id); }
                 updateLikeUI();
@@ -266,7 +261,8 @@
                 const date = new Date(c.created_at).toLocaleDateString('fa-IR');
                 const author = c.author_name || 'ناشناس';
                 const avatarUrl = c.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
-                const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment(${c.id})">حذف 🗑️</button>` : '';
+                // رفع باگ پاک کردن کامنت با قرار دادن کوتیشن در تابع
+                const deleteBtn = isAdmin ? `<button class="delete-comment-btn" onclick="deleteComment('${c.id}')">حذف 🗑️</button>` : '';
                 
                 listDiv.innerHTML += `
                     <div class="comment-box">
