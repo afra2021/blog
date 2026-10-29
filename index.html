@@ -9,7 +9,7 @@
     <style>
         :root { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --border-color: #333; --accent-color: #00adb5; }
         [data-theme="light"] { --bg-color: #f4f4f9; --text-color: #333333; --card-bg: #ffffff; --border-color: #ddd; --accent-color: #007c82; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; min-height: 100vh; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Vazirmatn', sans-serif; margin: 0; transition: 0.4s ease; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
         header { background-color: var(--bg-color); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.4s; }
         .header-left { display: flex; align-items: center; gap: 20px; }
@@ -30,54 +30,59 @@
         .admin-btn { background: linear-gradient(45deg, var(--accent-color), #006b70); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
         .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,173,181,0.4); }
 
-        /* نوار کنترل (جستجو و دسته‌بندی‌ها) */
-        .top-controls { max-width: 1100px; margin: 30px auto 10px auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .search-box { display: flex; align-items: center; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 25px; padding: 8px 15px; width: 100%; max-width: 350px; transition: 0.3s; }
-        .search-box:focus-within { border-color: var(--accent-color); box-shadow: 0 0 10px rgba(0,173,181,0.1); }
-        .search-box input { border: none; background: transparent; color: var(--text-color); outline: none; font-family: inherit; font-size: 0.95rem; width: 100%; padding: 0 10px; }
-        .search-box input::placeholder { color: #888; }
+        /* نوار کنترل بالا با عرض زیاد و منظم */
+        .top-controls { max-width: 1400px; width: 95%; margin: 30px auto 10px auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-sizing: border-box; }
         
-        .category-filters { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+        .category-filters { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; flex: 1; align-items: center; }
         .category-filters::-webkit-scrollbar { display: none; }
         .cat-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 20px; border-radius: 25px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 0.9rem; white-space: nowrap; transition: 0.3s; }
         .cat-pill:hover { border-color: var(--accent-color); }
         .cat-pill.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
-        /* لی‌آوت اصلی (دو ستونه) */
-        .main-layout { display: flex; gap: 30px; max-width: 1100px; margin: 10px auto 40px auto; padding: 0 20px; align-items: flex-start; flex: 1; width: 100%; box-sizing: border-box;}
-        .content { width: 68%; }
-        .left-sidebar { width: 32%; position: sticky; top: 100px; display: flex; flex-direction: column; gap: 20px; }
+        /* باکس جستجوی باز شونده (Expandable) */
+        .search-wrapper { display: flex; align-items: center; background: var(--card-bg); border-radius: 25px; border: 1px solid var(--border-color); transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s; overflow: hidden; width: 42px; height: 42px; flex-shrink: 0; }
+        .search-wrapper.active { width: 280px; border-color: var(--accent-color); box-shadow: 0 4px 15px rgba(0,173,181,0.15); }
+        .search-toggle { background: transparent; border: none; color: var(--text-color); width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; padding: 0; }
+        .search-toggle:hover { color: var(--accent-color); }
+        .search-input { flex: 1; border: none; background: transparent; color: var(--text-color); outline: none; font-family: inherit; padding: 0; width: 100%; transition: 0.3s; display: none; font-size: 0.95rem; }
+        .search-input::placeholder { color: #888; }
+        .search-wrapper.active .search-input { display: block; padding-left: 15px; }
+
+        /* لی‌آوت اصلی (عرض باز و چسبیده به طرفین) */
+        .main-layout { display: flex; justify-content: space-between; gap: 40px; max-width: 1400px; width: 95%; margin: 15px auto 40px auto; padding: 0 20px; align-items: flex-start; flex: 1; box-sizing: border-box; }
+        .content { flex: 1; max-width: 900px; }
+        .left-sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 100px; }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .post-card { background: var(--card-bg); border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; overflow: hidden; }
         .post-card:hover { transform: translateY(-4px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
-        .post-cover { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid var(--border-color); display: block; }
+        .post-cover { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid var(--border-color); display: block; }
         .post-card-body { padding: 25px; cursor: pointer; }
         .category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: rgba(0, 173, 181, 0.1); color: var(--accent-color); margin-bottom: 12px; border: 1px solid rgba(0, 173, 181, 0.2); }
-        .post-title { margin: 0 0 15px 0; font-size: 1.5rem; color: var(--text-color); line-height: 1.4; }
+        .post-title { margin: 0 0 15px 0; font-size: 1.6rem; color: var(--text-color); line-height: 1.5; }
         
         .post-meta { font-size: 0.85rem; color: #888; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; }
         .author-info { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; padding: 4px 10px; border-radius: 20px; transition: 0.3s; margin-right: -10px; }
         .author-info:hover { background: rgba(0, 173, 181, 0.1); color: var(--accent-color); }
-        .post-avatar { width: 24px; height: 24px; border-radius: 50%; background: #222; object-fit: cover; }
+        .post-avatar { width: 26px; height: 26px; border-radius: 50%; background: #222; object-fit: cover; }
         
         .stat-icons { display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,0.1); padding: 5px 12px; border-radius: 15px; border: 1px solid var(--border-color); }
         .stat-item { display: flex; align-items: center; gap: 5px; }
-        .post-excerpt { line-height: 1.8; font-size: 1rem; opacity: 0.85; }
+        .post-excerpt { line-height: 1.8; font-size: 1.05rem; opacity: 0.85; }
         
         /* استایل سایدبار منتخب */
         .widget { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
         .widget-title { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; color: var(--accent-color); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .popular-item { display: flex; gap: 12px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; padding: 8px; border-radius: 8px; }
-        .popular-item:hover { background: rgba(0, 173, 181, 0.05); transform: translateX(-5px); }
+        .popular-item { display: flex; gap: 12px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; padding: 8px; border-radius: 8px; border: 1px solid transparent; }
+        .popular-item:hover { background: rgba(0, 173, 181, 0.05); border-color: rgba(0,173,181,0.2); transform: translateX(-5px); }
         .popular-item:last-child { margin-bottom: 0; }
-        .popular-thumb { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #333; flex-shrink: 0; border: 1px solid var(--border-color); }
+        .popular-thumb { width: 65px; height: 65px; border-radius: 8px; object-fit: cover; background: #333; flex-shrink: 0; border: 1px solid var(--border-color); }
         .popular-info { display: flex; flex-direction: column; justify-content: center; }
         .popular-title { font-size: 0.95rem; font-weight: bold; color: var(--text-color); margin: 0 0 8px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .popular-meta { font-size: 0.75rem; color: #888; display: flex; gap: 10px; }
 
-        .no-results { text-align: center; padding: 40px 20px; color: #888; font-size: 1.1rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .no-results { text-align: center; padding: 50px 20px; color: #888; font-size: 1.1rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         
         /* فوتر */
         footer { background: var(--card-bg); padding: 25px 20px; text-align: center; border-top: 1px solid var(--border-color); color: #888; font-size: 0.9rem; margin-top: auto; }
@@ -90,16 +95,19 @@
         .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.9rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
         .toast.show { opacity: 1; transform: translateX(0); }
 
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .content, .left-sidebar { width: 100%; max-width: 100%; }
+            .left-sidebar { margin-top: 10px; position: static; }
+        }
+
         @media (max-width: 768px) {
             header { padding: 12px 15px; flex-direction: column; gap: 12px; align-items: stretch; }
             .header-left, .actions { justify-content: space-between; width: 100%; }
             .live-clock span { display: none; }
             .live-clock { padding: 6px 10px; }
-            .top-controls { flex-direction: column-reverse; gap: 15px; }
-            .search-box { max-width: 100%; }
-            .main-layout { flex-direction: column; margin-top: 15px; }
-            .content, .left-sidebar { width: 100%; }
-            .left-sidebar { margin-top: 20px; }
+            .top-controls { flex-direction: column-reverse; gap: 15px; align-items: stretch;}
+            .search-wrapper.active { width: 100%; }
             .post-cover { height: 180px; }
             .stat-icons { width: 100%; justify-content: space-between; margin-top: 10px; }
         }
@@ -129,9 +137,13 @@
 
     <div class="top-controls">
         <div id="category-filters" class="category-filters"></div>
-        <div class="search-box">
-            <svg class="icon" style="stroke: #888;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="search-input" placeholder="جستجو در عنوان و متن..." oninput="handleSearch(this.value)">
+        
+        <!-- دکمه سرچ باز شونده -->
+        <div class="search-wrapper" id="search-wrapper">
+            <button class="search-toggle" onclick="toggleSearch()" title="جستجو">
+                <svg class="icon" style="width:18px; height:18px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+            <input type="text" id="search-input" class="search-input" placeholder="عبارت مورد نظر..." oninput="handleSearch(this.value)">
         </div>
     </div>
 
@@ -141,12 +153,12 @@
             <div id="posts-container"></div>
         </main>
         
-        <!-- سایدبار چسبان (مطالب منتخب/محبوب) -->
+        <!-- سایدبار چسبانِ سمت چپ -->
         <aside class="left-sidebar">
             <div class="widget">
                 <h3 class="widget-title">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> 
-                    مطالب منتخب کاربران
+                    <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 
+                    مطالب منتخب
                 </h3>
                 <div id="popular-posts-widget">در حال پردازش...</div>
             </div>
@@ -165,8 +177,22 @@
     <div id="toast-container"></div>
 
     <script>
+        // کلمات متغیر دکمه مدیریت
         const ctaPhrases = ['بنویس!', 'تعریف کن!', 'داستان بگو!', 'خلق کن!', 'چی تو ذهنته؟', 'امروز چی مینویسی؟'];
         document.getElementById('cta-text').innerText = ctaPhrases[Math.floor(Math.random() * ctaPhrases.length)];
+
+        // باز و بسته شدن سرچ
+        function toggleSearch() {
+            const wrapper = document.getElementById('search-wrapper');
+            const input = document.getElementById('search-input');
+            wrapper.classList.toggle('active');
+            if(wrapper.classList.contains('active')) {
+                input.focus();
+            } else {
+                input.value = '';
+                handleSearch('');
+            }
+        }
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
@@ -276,12 +302,10 @@
 
             let filteredPosts = allPostsData;
             
-            // فیلتر دسته‌بندی
             if (currentCategory !== 'all') {
                 filteredPosts = filteredPosts.filter(p => p.category === currentCategory);
             }
             
-            // فیلتر جستجو (در عنوان و متن)
             if (currentSearchQuery) {
                 filteredPosts = filteredPosts.filter(p => {
                     const titleMatch = (p.title || '').toLowerCase().includes(currentSearchQuery);
@@ -297,8 +321,8 @@
                 container.innerHTML = `
                     <div class="no-results">
                         <svg class="icon" style="width:40px; height:40px; stroke:var(--accent-color);" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <b>متأسفانه نتیجه‌ای یافت نشد!</b>
-                        <span style="font-size:0.9rem;">عبارت دیگری را جستجو کنید یا دسته‌بندی را تغییر دهید.</span>
+                        <b>نتیجه‌ای یافت نشد!</b>
+                        <span style="font-size:0.9rem;">لطفاً کلمه‌ی دیگری را جستجو کنید.</span>
                     </div>`;
                 return;
             }
@@ -354,7 +378,6 @@
                 return;
             }
             
-            // سورت کردن بر اساس بیشترین لایک و گرفتن ۴ تای اول
             const topPosts = [...allPostsData].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 4);
             sideContainer.innerHTML = '';
             
@@ -362,12 +385,15 @@
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
                 let firstImg = tempDiv.querySelector('img');
-                // یک بک‌گراند دیفالت اگر عکس نداشت
-                let coverSrc = firstImg ? firstImg.src : `https://placehold.co/100x100/1e1e1e/00adb5?text=Post`;
+                
+                // در صورتی که پست عکس نداشت یک پس‌زمینه رنگی مینیمال می‌گیرد
+                let coverHtml = firstImg 
+                    ? `<img src="${firstImg.src}" class="popular-thumb" alt="کاور">`
+                    : `<div class="popular-thumb" style="display:flex; justify-content:center; align-items:center; color:#555; background:rgba(0,173,181,0.1); border-color:rgba(0,173,181,0.2);">📝</div>`;
                 
                 sideContainer.innerHTML += `
                     <div class="popular-item" onclick="window.location.href='post.html?id=${post.id}'">
-                        <img src="${coverSrc}" class="popular-thumb" alt="کاور">
+                        ${coverHtml}
                         <div class="popular-info">
                             <h4 class="popular-title">${escapeHtml(post.title)}</h4>
                             <div class="popular-meta">
