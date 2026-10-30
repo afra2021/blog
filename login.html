@@ -14,7 +14,6 @@
         
         svg.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
         
-        /* انیمیشن ورود فرم */
         @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
         .login-container { background: var(--card-bg); padding: 40px; border-radius: 16px; width: 100%; max-width: 380px; border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: scaleUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; box-sizing: border-box; text-align: center; }
@@ -37,7 +36,6 @@
         .back-link { display: inline-flex; align-items: center; gap: 5px; color: #888; text-decoration: none; font-size: 0.9rem; margin-top: 10px; transition: 0.3s; }
         .back-link:hover { color: var(--accent-color); }
 
-        /* Toast Notifications */
         #toast-container { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
         .toast { background: var(--card-bg); color: var(--text-color); padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: inherit; font-size: 0.9rem; opacity: 0; transform: translateX(-50px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; gap: 10px; }
         .toast.show { opacity: 1; transform: translateX(0); }
@@ -55,8 +53,8 @@
         
         <form id="login-form">
             <div class="input-group">
-                <label for="email">ایمیل</label>
-                <input type="email" id="email" placeholder="example@email.com" required dir="ltr">
+                <label for="identifier">نام کاربری (یا ایمیل مدیر)</label>
+                <input type="text" id="identifier" placeholder="نام کاربری خود را وارد کنید..." required dir="ltr">
             </div>
             
             <div class="input-group">
@@ -71,7 +69,7 @@
             
             <button type="button" class="btn-secondary" id="reg-btn" onclick="handleRegister()">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                ثبت‌نام کاربر جدید
+                ثبت‌نام با نام کاربری
             </button>
         </form>
 
@@ -84,7 +82,6 @@
     <div id="toast-container"></div>
 
     <script>
-        // خواندن تم از لوکال استوریج برای هماهنگی با سایت
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -107,7 +104,15 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // بررسی اینکه اگر کاربر قبلاً لاگین است، مستقیماً به پنل برود
+        // تبدیل هوشمند نام کاربری به فرمت قابل قبول دیتابیس (اگر ایمیل نبود)
+        function formatIdentifier(input) {
+            let clean = input.trim().toLowerCase();
+            if (clean.includes('@')) {
+                return clean; // برای ادمین یا کسانی که ایمیل می‌زنند
+            }
+            return `${clean}@blog.local`; // ساخت ایمیل مجازی برای یوزرنیم‌ها
+        }
+
         async function checkAlreadyLoggedIn() {
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
@@ -119,59 +124,71 @@
         // عملیات ورود
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value.trim();
+            const rawInput = document.getElementById('identifier').value.trim();
             const password = document.getElementById('password').value.trim();
             
-            if (!email || !password) return showToast('لطفاً ایمیل و رمز عبور را وارد کنید.', true);
+            if (!rawInput || !password) return showToast('لطفاً نام کاربری و رمز عبور را وارد کنید.', true);
 
+            const emailToAuth = formatIdentifier(rawInput);
             const btn = document.getElementById('login-btn');
             const originalContent = btn.innerHTML;
-            btn.innerHTML = 'در حال پردازش...';
+            btn.innerHTML = 'در حال ورود...';
             btn.disabled = true;
 
-            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await _supabase.auth.signInWithPassword({ 
+                email: emailToAuth, 
+                password: password 
+            });
 
             if (error) {
-                // ترجمه خطاهای رایج
-                let errorMsg = error.message;
-                if (errorMsg.includes('Invalid login credentials')) errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
-                
+                let errorMsg = 'نام کاربری یا رمز عبور اشتباه است.';
                 showToast(errorMsg, true);
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             } else {
-                showToast('با موفقیت وارد شدید! در حال انتقال...');
-                setTimeout(() => window.location.href = 'admin.html', 1500);
+                showToast('خوش آمدید! در حال انتقال...');
+                setTimeout(() => window.location.href = 'admin.html', 1200);
             }
         });
 
-        // عملیات ثبت‌نام
+        // عملیات ثبت‌نام با نام کاربری
         async function handleRegister() {
-            const email = document.getElementById('email').value.trim();
+            const rawInput = document.getElementById('identifier').value.trim();
             const password = document.getElementById('password').value.trim();
             
-            if (!email || !password) return showToast('برای ثبت‌نام، لطفاً ایمیل و یک رمز عبور وارد کنید.', true);
+            if (!rawInput || !password) return showToast('برای ثبت‌نام، یک نام کاربری و رمز عبور وارد کنید.', true);
             if (password.length < 6) return showToast('رمز عبور باید حداقل ۶ کاراکتر باشد.', true);
+
+            const emailToRegister = formatIdentifier(rawInput);
+            const cleanUsername = rawInput.includes('@') ? rawInput.split('@')[0] : rawInput;
 
             const btn = document.getElementById('reg-btn');
             const originalContent = btn.innerHTML;
-            btn.innerHTML = 'در حال ثبت‌نام...';
+            btn.innerHTML = 'در حال ساخت حساب...';
             btn.disabled = true;
 
-            const { data, error } = await _supabase.auth.signUp({ email, password });
+            const { data, error } = await _supabase.auth.signUp({ 
+                email: emailToRegister, 
+                password: password,
+                options: {
+                    data: {
+                        username: cleanUsername,
+                        display_name: cleanUsername
+                    }
+                }
+            });
 
             if (error) {
                 let errorMsg = error.message;
-                if (errorMsg.includes('User already registered')) errorMsg = 'این ایمیل قبلاً ثبت شده است.';
+                if (errorMsg.includes('User already registered')) errorMsg = 'این نام کاربری قبلاً انتخاب شده است.';
                 
                 showToast(errorMsg, true);
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             } else {
-                showToast('ثبت‌نام با موفقیت انجام شد! حالا می‌توانید وارد شوید.');
+                showToast('حساب شما با موفقیت ساخته شد! اکنون وارد شوید.');
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
-                // پاک کردن فیلد رمز برای امنیت
                 document.getElementById('password').value = '';
             }
         }
