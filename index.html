@@ -30,7 +30,6 @@
         .admin-btn { background: linear-gradient(45deg, var(--accent-color), #006b70); color: white; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
         .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,173,181,0.4); }
 
-        /* نوار کنترل بالا با عرض زیاد و منظم */
         .top-controls { max-width: 1400px; width: 95%; margin: 30px auto 10px auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-sizing: border-box; }
         
         .category-filters { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; flex: 1; align-items: center; }
@@ -39,7 +38,6 @@
         .cat-pill:hover { border-color: var(--accent-color); }
         .cat-pill.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
-        /* باکس جستجوی باز شونده (Expandable) */
         .search-wrapper { display: flex; align-items: center; background: var(--card-bg); border-radius: 25px; border: 1px solid var(--border-color); transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s; overflow: hidden; width: 42px; height: 42px; flex-shrink: 0; }
         .search-wrapper.active { width: 280px; border-color: var(--accent-color); box-shadow: 0 4px 15px rgba(0,173,181,0.15); }
         .search-toggle { background: transparent; border: none; color: var(--text-color); width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; padding: 0; }
@@ -48,7 +46,6 @@
         .search-input::placeholder { color: #888; }
         .search-wrapper.active .search-input { display: block; padding-left: 15px; }
 
-        /* لی‌آوت اصلی (عرض باز و چسبیده به طرفین) */
         .main-layout { display: flex; justify-content: space-between; gap: 40px; max-width: 1400px; width: 95%; margin: 15px auto 40px auto; padding: 0 20px; align-items: flex-start; flex: 1; box-sizing: border-box; }
         .content { flex: 1; max-width: 900px; }
         .left-sidebar { width: 300px; flex-shrink: 0; position: sticky; top: 100px; }
@@ -57,6 +54,11 @@
         
         .post-card { background: var(--card-bg); border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; overflow: hidden; }
         .post-card:hover { transform: translateY(-4px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
+        
+        /* استایل پست مخفی برای ادمین */
+        .post-card.hidden-post { border: 1px dashed #ff4c4c; opacity: 0.75 !important; }
+        .hidden-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: rgba(255, 76, 76, 0.15); color: #ff4c4c; margin-bottom: 12px; margin-left: 8px; border: 1px solid rgba(255, 76, 76, 0.3); }
+
         .post-cover { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid var(--border-color); display: block; }
         .post-card-body { padding: 25px; cursor: pointer; }
         .category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: rgba(0, 173, 181, 0.1); color: var(--accent-color); margin-bottom: 12px; border: 1px solid rgba(0, 173, 181, 0.2); }
@@ -71,7 +73,6 @@
         .stat-item { display: flex; align-items: center; gap: 5px; }
         .post-excerpt { line-height: 1.8; font-size: 1.05rem; opacity: 0.85; }
         
-        /* استایل سایدبار منتخب */
         .widget { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
         .widget-title { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; color: var(--accent-color); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .popular-item { display: flex; gap: 12px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; padding: 8px; border-radius: 8px; border: 1px solid transparent; }
@@ -84,7 +85,6 @@
 
         .no-results { text-align: center; padding: 50px 20px; color: #888; font-size: 1.1rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         
-        /* فوتر */
         footer { background: var(--card-bg); padding: 25px 20px; text-align: center; border-top: 1px solid var(--border-color); color: #888; font-size: 0.9rem; margin-top: auto; }
         .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
         .footer-links a { color: var(--accent-color); text-decoration: none; font-weight: bold; transition: 0.3s; }
@@ -138,7 +138,6 @@
     <div class="top-controls">
         <div id="category-filters" class="category-filters"></div>
         
-        <!-- دکمه سرچ باز شونده -->
         <div class="search-wrapper" id="search-wrapper">
             <button class="search-toggle" onclick="toggleSearch()" title="جستجو">
                 <svg class="icon" style="width:18px; height:18px;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -153,7 +152,6 @@
             <div id="posts-container"></div>
         </main>
         
-        <!-- سایدبار چسبانِ سمت چپ -->
         <aside class="left-sidebar">
             <div class="widget">
                 <h3 class="widget-title">
@@ -177,11 +175,9 @@
     <div id="toast-container"></div>
 
     <script>
-        // کلمات متغیر دکمه مدیریت
         const ctaPhrases = ['بنویس!', 'تعریف کن!', 'داستان بگو!', 'خلق کن!', 'چی تو ذهنته؟', 'امروز چی مینویسی؟'];
         document.getElementById('cta-text').innerText = ctaPhrases[Math.floor(Math.random() * ctaPhrases.length)];
 
-        // باز و بسته شدن سرچ
         function toggleSearch() {
             const wrapper = document.getElementById('search-wrapper');
             const input = document.getElementById('search-input');
@@ -223,7 +219,7 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        window.addEventListener('pageshow', function(event) { if (event.persisted) fetchAndLoadPosts(); });
+        window.addEventListener('pageshow', function(event) { if (event.persisted) initApp(); });
 
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
@@ -240,17 +236,24 @@
         let allCommentsData = [];
         let currentCategory = 'all';
         let currentSearchQuery = '';
+        let isAdmin = false;
 
-        async function checkUserStatus() {
+        async function initApp() {
             const { data: { session } } = await _supabase.auth.getSession();
             const authDiv = document.getElementById('auth-status');
+            isAdmin = false;
+
             if (session) {
+                if (session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                    isAdmin = true;
+                }
                 let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username || session.user.email.split('@')[0];
                 let avatar = session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
                 authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
             }
+
+            await fetchAndLoadPosts();
         }
-        checkUserStatus();
 
         async function fetchAndLoadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
@@ -262,7 +265,8 @@
                 return;
             }
             
-            allPostsData = posts;
+            // اگر کاربر ادمین نیست، پست‌های مخفی به طور کامل فیلتر می‌شوند
+            allPostsData = isAdmin ? posts : posts.filter(p => !p.is_hidden);
             allCommentsData = comments || [];
             document.getElementById('loading').style.display = 'none';
             
@@ -332,6 +336,7 @@
                 const author = post.author_name || 'ناشناس';
                 const avatarUrl = post.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
                 const categoryBadge = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
+                const hiddenBadge = post.is_hidden ? `<div class="hidden-badge">👁️‍🗨️ مخفی شده (فقط دید ادمین)</div>` : '';
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
@@ -345,7 +350,7 @@
                 const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
                 const cardHTML = `
-                    <div class="post-card" style="animation-delay: ${index * 0.05}s;">
+                    <div class="post-card ${post.is_hidden ? 'hidden-post' : ''}" style="animation-delay: ${index * 0.05}s;">
                         ${coverHtml}
                         <div class="post-card-body" onclick="window.location.href='post.html?id=${post.id}'">
                             <div class="post-meta">
@@ -361,7 +366,7 @@
                                     <span class="stat-item">${iconComment} ${commentCounts[post.id] || 0}</span>
                                 </div>
                             </div>
-                            ${categoryBadge}
+                            ${hiddenBadge}${categoryBadge}
                             <h2 class="post-title">${escapeHtml(post.title)}</h2>
                             <div class="post-excerpt">${excerpt}</div>
                         </div>
@@ -373,12 +378,15 @@
         
         function renderPopularSidebar() {
             const sideContainer = document.getElementById('popular-posts-widget');
-            if (!sideContainer || allPostsData.length === 0) {
+            // در سایدبار منتخب، حتی برای ادمین هم فقط پست‌های عمومی نمایش داده می‌شوند
+            const publicPosts = allPostsData.filter(p => !p.is_hidden);
+
+            if (!sideContainer || publicPosts.length === 0) {
                 sideContainer.innerHTML = '<p style="color:#888; font-size:0.9rem;">هنوز مطلبی نیست.</p>';
                 return;
             }
             
-            const topPosts = [...allPostsData].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 4);
+            const topPosts = [...publicPosts].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 4);
             sideContainer.innerHTML = '';
             
             topPosts.forEach(post => {
@@ -386,7 +394,6 @@
                 tempDiv.innerHTML = post.content;
                 let firstImg = tempDiv.querySelector('img');
                 
-                // در صورتی که پست عکس نداشت یک پس‌زمینه رنگی مینیمال می‌گیرد
                 let coverHtml = firstImg 
                     ? `<img src="${firstImg.src}" class="popular-thumb" alt="کاور">`
                     : `<div class="popular-thumb" style="display:flex; justify-content:center; align-items:center; color:#555; background:rgba(0,173,181,0.1); border-color:rgba(0,173,181,0.2);">📝</div>`;
@@ -408,7 +415,7 @@
         
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
         
-        fetchAndLoadPosts();
+        initApp();
     </script>
 </body>
 </html>
