@@ -50,7 +50,10 @@
         .btn-action { display: flex; align-items: center; gap: 6px; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: inherit; color: white; }
         .btn-delete { background: #ff4c4c; } .btn-delete:hover { background: #e00000; }
         .btn-edit { background: var(--accent-color); } .btn-edit:hover { opacity: 0.8; }
+        .btn-hide { background: #f39c12; } .btn-hide:hover { opacity: 0.9; }
         .btn-cancel { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit; } .btn-cancel:hover { background: #444; }
+
+        .hidden-alert-banner { background: rgba(255, 76, 76, 0.15); border: 1px solid #ff4c4c; color: #ff4c4c; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; display: none; align-items: center; gap: 8px; font-size: 0.9rem; }
 
         .comments-section { margin-top: 50px; padding-top: 20px; border-top: 2px dashed var(--border-color); }
         .comment-box { display: flex; gap: 15px; background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -75,7 +78,6 @@
         .modal-msg { margin: 0 0 20px 0; font-size: 1.1rem; line-height: 1.6; color: var(--text-color); }
         .modal-actions { display: flex; justify-content: center; gap: 10px; }
 
-        /* استایل‌های رسپانسیو موبایل */
         @media (max-width: 768px) {
             .container { margin: 20px 10px; padding: 20px 15px; }
             .post-title { font-size: 1.6rem; }
@@ -103,7 +105,6 @@
     </div>
     
     <div id="toast-container"></div>
-
     <div id="progress-bar"></div>
     
     <div class="sticky-author-bar" id="sticky-bar">
@@ -120,9 +121,17 @@
             <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> بازگشت به صفحه اصلی
         </a>
         
+        <div id="hidden-banner" class="hidden-alert-banner">
+            👁️‍🗨️ این مطلب در حال حاضر مخفی است و فقط شما (ادمین) می‌توانید آن را ببینید.
+        </div>
+
         <div id="admin-panel" class="admin-controls">
             <span style="color: var(--accent-color); font-weight: bold;">پنل مدیریت مطلب</span>
-            <div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <!-- دکمه مخفی‌سازی ویژه ادمین کل -->
+                <button id="toggle-hide-btn" class="btn-action btn-hide" style="display:none;" onclick="toggleHidePost()">
+                    👁️‍🗨️ مخفی کردن
+                </button>
                 <button class="btn-action btn-edit" onclick="editThisPost()">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> ویرایش
                 </button>
@@ -134,32 +143,34 @@
 
         <h1 class="post-title" id="p-title">در حال بارگذاری...</h1>
         
-        <div class="post-meta-container" id="main-meta-container">
-            <div class="post-meta">
-                <a href="#" id="p-author" class="author-badge">...</a>
-                <span class="stats-badge" id="p-readtime">...</span>
-                <span class="stats-badge" id="p-views">...</span>
+        <div id="post-body-wrapper">
+            <div class="post-meta-container" id="main-meta-container">
+                <div class="post-meta">
+                    <a href="#" id="p-author" class="author-badge">...</a>
+                    <span class="stats-badge" id="p-readtime">...</span>
+                    <span class="stats-badge" id="p-views">...</span>
+                </div>
+                <button id="like-btn" class="like-btn" onclick="toggleLike()">
+                    <svg class="icon icon-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    <span id="like-count">0</span>
+                </button>
             </div>
-            <button id="like-btn" class="like-btn" onclick="toggleLike()">
-                <svg class="icon icon-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                <span id="like-count">0</span>
-            </button>
-        </div>
 
-        <div class="post-content" id="p-content"></div>
+            <div class="post-content" id="p-content"></div>
 
-        <div class="comments-section" id="comments-anchor">
-            <h3 style="display:flex; align-items:center; gap:8px;">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                نظرات کاربران <span id="comment-count-display" style="color:var(--accent-color); font-size:0.9rem;"></span>
-            </h3>
-            <div id="comments-list">در حال بارگذاری نظرات...</div>
+            <div class="comments-section" id="comments-anchor">
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    نظرات کاربران <span id="comment-count-display" style="color:var(--accent-color); font-size:0.9rem;"></span>
+                </h3>
+                <div id="comments-list">در حال بارگذاری نظرات...</div>
 
-            <div class="add-comment" id="comment-form" style="display: none;">
-                <textarea id="new-comment-text" placeholder="نظر خود را بنویسید..."></textarea>
-                <button class="btn-submit-comment" onclick="addComment()">ارسال نظر</button>
+                <div class="add-comment" id="comment-form" style="display: none;">
+                    <textarea id="new-comment-text" placeholder="نظر خود را بنویسید..."></textarea>
+                    <button class="btn-submit-comment" onclick="addComment()">ارسال نظر</button>
+                </div>
+                <p id="login-msg" style="color: #888; font-size: 0.9rem;">برای ثبت نظر باید <a href="login.html" style="color: var(--accent-color);">وارد شوید</a>.</p>
             </div>
-            <p id="login-msg" style="color: #888; font-size: 0.9rem;">برای ثبت نظر باید <a href="login.html" style="color: var(--accent-color);">وارد شوید</a>.</p>
         </div>
     </div>
 
@@ -216,6 +227,7 @@
         
         let currentUser = null; let currentUsername = ''; let currentAvatar = '';
         let isAdmin = false; 
+        let isPostHidden = false;
         
         let currentLikes = 0; let hasLiked = false;
         let likedUsersArray = []; let viewedUsersArray = [];
@@ -238,10 +250,10 @@
                 
                 document.getElementById('comment-form').style.display = 'flex';
                 document.getElementById('login-msg').style.display = 'none';
-                if (currentUser.email === ADMIN_EMAIL) isAdmin = true;
+                if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) isAdmin = true;
             }
 
-            loadPost();
+            await loadPost();
             loadComments();
         }
 
@@ -249,8 +261,19 @@
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) {
                 document.getElementById('p-title').innerText = 'خطا در بارگذاری مطلب';
+                document.getElementById('post-body-wrapper').style.display = 'none';
                 return showToast('مطلب یافت نشد یا پاک شده است', true);
             }
+
+            // قفل دسترسی برای پست‌های مخفی
+            isPostHidden = Boolean(data.is_hidden);
+            if (isPostHidden && !isAdmin) {
+                document.getElementById('p-title').innerText = '🔒 این مطلب توسط مدیر سایت به صورت موقت مخفی شده است.';
+                document.getElementById('post-body-wrapper').style.display = 'none';
+                return;
+            }
+
+            updateHideUI();
 
             viewedUsersArray = (data.viewed_users && data.viewed_users.trim() !== '') ? data.viewed_users.split(',') : [];
             likedUsersArray = (data.liked_users && data.liked_users.trim() !== '') ? data.liked_users.split(',') : [];
@@ -290,6 +313,37 @@
 
             if (currentUser && (isAdmin || currentUser.id === data.user_id)) {
                 document.getElementById('admin-panel').style.display = 'flex';
+                if (isAdmin) {
+                    document.getElementById('toggle-hide-btn').style.display = 'flex';
+                }
+            }
+        }
+
+        function updateHideUI() {
+            const banner = document.getElementById('hidden-banner');
+            const hideBtn = document.getElementById('toggle-hide-btn');
+            if (isPostHidden) {
+                banner.style.display = 'flex';
+                hideBtn.innerHTML = '👁️ نمایش عمومی';
+                hideBtn.style.background = '#2ecc71';
+            } else {
+                banner.style.display = 'none';
+                hideBtn.innerHTML = '👁️‍🗨️ مخفی کردن موقت';
+                hideBtn.style.background = '#f39c12';
+            }
+        }
+
+        async function toggleHidePost() {
+            if (!isAdmin) return;
+            const newStatus = !isPostHidden;
+            const { error } = await _supabase.from('posts').update({ is_hidden: newStatus }).eq('id', postId);
+            
+            if (error) {
+                showToast('خطا در تغییر وضعیت نمایش: ' + error.message, true);
+            } else {
+                isPostHidden = newStatus;
+                updateHideUI();
+                showToast(isPostHidden ? 'مطلب مخفی شد (فقط قابل رویت برای شما)' : 'مطلب دوباره برای همه قابل نمایش شد!');
             }
         }
 
