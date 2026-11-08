@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>پنل مدیریت - Real Blog</title>
+    
+    <!-- لوگوی تب مرورگر (R فیروزه‌ای) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
+
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -15,7 +19,7 @@
         
         header { background-color: var(--bg-color); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.4s; }
         .header-left { display: flex; align-items: center; gap: 20px; }
-        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; }
+        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif;}
         .header-title span { color: var(--accent-color); }
         .actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         
@@ -266,6 +270,7 @@
             }
         }
 
+        // --- رفع باگ آپدیت نشدن نام در پست‌های قبلی ---
         async function updateProfile() {
             const newName = document.getElementById('prof-name').value.trim();
             const btn = document.getElementById('prof-btn');
@@ -273,6 +278,8 @@
             if(!newName) return showToast('نام نمایشی نمی‌تواند خالی باشد!', true);
             
             btn.innerText = 'در حال ذخیره...';
+            
+            // ۱. آپدیت اکانت
             const { data, error } = await _supabase.auth.updateUser({
                 data: { display_name: newName, avatar_url: uploadedAvatarUrl }
             });
@@ -280,9 +287,17 @@
             if (error) {
                 showToast('خطا در بروزرسانی پروفایل', true);
             } else {
-                showToast('پروفایل با موفقیت بروزرسانی شد!');
+                // ۲. پیدا کردن و آپدیت تمام پست‌های قبلی این کاربر در دیتابیس
+                await _supabase.from('posts').update({
+                    author_name: newName,
+                    avatar_url: uploadedAvatarUrl
+                }).eq('user_id', currentUser.id);
+
+                // ۳. رفرش رابط کاربری
+                showToast('پروفایل و مطالب قبلی با موفقیت بروزرسانی شدند!');
                 currentUser = data.user;
                 updateHeaderAuthUI();
+                loadMyPosts(); // رفرش لیست پست‌ها تا اسم جدید نمایش داده شود
             }
             btn.innerText = 'ذخیره پروفایل';
         }
@@ -313,7 +328,6 @@
         }
 
         async function loadMyPosts() {
-            // اگر ادمین است همه پست‌ها را ببیند، در غیر این صورت فقط پست‌های خودش
             let query = _supabase.from('posts').select('*').order('created_at', { ascending: false });
             if (!isAdmin) {
                 query = query.eq('user_id', currentUser.id);
@@ -395,7 +409,6 @@
 
             let error;
             if (editingPostId) {
-                // هنگام ویرایش، فقط محتوا آپدیت شود تا نام نویسنده اصلی تغییر نکند
                 const { error: updateErr } = await _supabase.from('posts').update({
                     title: title, content: content, category: category
                 }).eq('id', editingPostId);
