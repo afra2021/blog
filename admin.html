@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>پنل مدیریت - Real Blog</title>
-    
-    <!-- لوگوی تب مرورگر (R فیروزه‌ای) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
-
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -210,7 +207,6 @@
         }
 
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
-        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
         
         let currentUser = null;
         let isAdmin = false;
@@ -223,7 +219,8 @@
                 window.location.href = 'login.html';
             } else {
                 currentUser = session.user;
-                if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                // تشخیص امن ادمین بدون وجود ایمیل در سورس کد
+                if (currentUser.user_metadata?.is_admin === true) {
                     isAdmin = true;
                     document.getElementById('posts-list-title').innerText = 'مدیریت کل مطالب سایت (ادمین)';
                 }
@@ -237,13 +234,13 @@
 
         function updateHeaderAuthUI() {
             const authDiv = document.getElementById('auth-status');
-            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.email.split('@')[0];
+            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || 'کاربر';
             let avatar = currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
-            authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
+            authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${escapeHtml(name)}</span></div>`;
         }
 
         function loadProfileSettings() {
-            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || currentUser.email.split('@')[0];
+            let name = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || '';
             uploadedAvatarUrl = currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name || 'user'}`;
             document.getElementById('prof-name').value = name;
             document.getElementById('avatar-preview').src = uploadedAvatarUrl;
@@ -270,7 +267,6 @@
             }
         }
 
-        // --- رفع باگ آپدیت نشدن نام در پست‌های قبلی ---
         async function updateProfile() {
             const newName = document.getElementById('prof-name').value.trim();
             const btn = document.getElementById('prof-btn');
@@ -279,7 +275,6 @@
             
             btn.innerText = 'در حال ذخیره...';
             
-            // ۱. آپدیت اکانت
             const { data, error } = await _supabase.auth.updateUser({
                 data: { display_name: newName, avatar_url: uploadedAvatarUrl }
             });
@@ -287,17 +282,15 @@
             if (error) {
                 showToast('خطا در بروزرسانی پروفایل', true);
             } else {
-                // ۲. پیدا کردن و آپدیت تمام پست‌های قبلی این کاربر در دیتابیس
                 await _supabase.from('posts').update({
                     author_name: newName,
                     avatar_url: uploadedAvatarUrl
                 }).eq('user_id', currentUser.id);
 
-                // ۳. رفرش رابط کاربری
                 showToast('پروفایل و مطالب قبلی با موفقیت بروزرسانی شدند!');
                 currentUser = data.user;
                 updateHeaderAuthUI();
-                loadMyPosts(); // رفرش لیست پست‌ها تا اسم جدید نمایش داده شود
+                loadMyPosts();
             }
             btn.innerText = 'ذخیره پروفایل';
         }
@@ -403,8 +396,7 @@
 
             btn.disabled = true; btn.innerText = 'در حال ذخیره...';
 
-            let authorName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
-            if(!authorName) authorName = currentUser.email.split('@')[0];
+            let authorName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || 'ناشناس';
             const authorAvatar = currentUser.user_metadata?.avatar_url || '';
 
             let error;
@@ -414,9 +406,10 @@
                 }).eq('id', editingPostId);
                 error = updateErr;
             } else {
+                // حذف ذخیره سازی author_email برای امنیت و حفظ حریم خصوصی در Inspect
                 const { error: insertErr } = await _supabase.from('posts').insert([{
                     title: title, content: content, category: category,
-                    user_id: currentUser.id, author_email: currentUser.email,
+                    user_id: currentUser.id,
                     author_name: authorName, avatar_url: authorAvatar, is_hidden: false
                 }]);
                 error = insertErr;
