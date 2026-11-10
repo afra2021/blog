@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ورود به حساب - Real Blog</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -104,13 +105,12 @@
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // تبدیل هوشمند نام کاربری به فرمت قابل قبول دیتابیس (اگر ایمیل نبود)
         function formatIdentifier(input) {
             let clean = input.trim().toLowerCase();
             if (clean.includes('@')) {
-                return clean; // برای ادمین یا کسانی که ایمیل می‌زنند
+                return clean;
             }
-            return `${clean}@blog.local`; // ساخت ایمیل مجازی برای یوزرنیم‌ها
+            return `${clean}@blog.local`;
         }
 
         async function checkAlreadyLoggedIn() {
@@ -121,7 +121,6 @@
         }
         checkAlreadyLoggedIn();
 
-        // عملیات ورود
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const rawInput = document.getElementById('identifier').value.trim();
@@ -151,7 +150,6 @@
             }
         });
 
-        // عملیات ثبت‌نام با نام کاربری
         async function handleRegister() {
             const rawInput = document.getElementById('identifier').value.trim();
             const password = document.getElementById('password').value.trim();
