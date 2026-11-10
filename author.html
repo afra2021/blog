@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>پروفایل نویسنده - Real Blog</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -13,7 +14,7 @@
         
         header { background-color: var(--bg-color); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.4s; }
         .header-left { display: flex; align-items: center; gap: 20px; }
-        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; }
+        .header-title { font-size: 1.6rem; font-weight: 900; color: var(--text-color); text-decoration: none; font-family: sans-serif; }
         .header-title span { color: var(--accent-color); }
         .theme-toggle { background: none; border: none; cursor: pointer; transition: 0.3s; padding: 0; color: var(--text-color); }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.15); color: var(--accent-color); }
@@ -32,6 +33,9 @@
         
         .post-card { background: var(--card-bg); border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); opacity: 0; animation: fadeInUp 0.4s ease forwards; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; overflow: hidden; }
         .post-card:hover { transform: translateY(-4px); border-color: var(--accent-color); box-shadow: 0 8px 25px rgba(0, 173, 181, 0.12); }
+        .post-card.hidden-post { border: 1px dashed #ff4c4c; opacity: 0.75 !important; }
+        .hidden-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; background: rgba(255, 76, 76, 0.15); color: #ff4c4c; margin-bottom: 12px; margin-left: 8px; border: 1px solid rgba(255, 76, 76, 0.3); }
+
         .post-cover { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid var(--border-color); display: block; }
         .post-card-body { padding: 25px; cursor: pointer; }
         
@@ -98,14 +102,36 @@
         const iconCalendar = `<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
 
         async function loadAuthorData() {
-            if (!authorId) return document.getElementById('posts-container').innerText = 'شناسه نویسنده نامعتبر است.';
-
-            const { data: posts, error } = await _supabase.from('posts').select('*').eq('user_id', authorId).order('created_at', { ascending: false });
-            const { data: commentsData } = await _supabase.from('comments').select('post_id');
             const container = document.getElementById('posts-container');
+            if (!authorId) return container.innerText = 'شناسه نویسنده نامعتبر است.';
+
+            // بررسی وضعیت ادمین برای نمایش یا عدم نمایش پست‌های مخفی
+            const { data: { session } } = await _supabase.auth.getSession();
+            const isAdmin = session?.user?.user_metadata?.is_admin === true;
+
+            const { data: rawPosts, error } = await _supabase.from('posts').select('*').eq('user_id', authorId).order('created_at', { ascending: false });
+            const { data: commentsData } = await _supabase.from('comments').select('post_id');
             
-            if (error || !posts || posts.length === 0) {
+            if (error || !rawPosts || rawPosts.length === 0) {
                 container.innerText = 'هیچ مطلبی از این نویسنده یافت نشد.';
+                return;
+            }
+
+            // آپدیت هدر پروفایل از روی اطلاعات نویسنده
+            const authorName = rawPosts[0].author_name || 'ناشناس';
+            document.getElementById('author-name').innerText = authorName;
+            const avatarImg = document.getElementById('author-avatar');
+            avatarImg.src = rawPosts[0].avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${authorName}`;
+            avatarImg.onerror = () => { avatarImg.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${authorName}`; };
+            document.getElementById('profile-card').style.display = 'block';
+
+            // فیلتر کردن پست‌های مخفی برای کاربران عادی
+            const posts = isAdmin ? rawPosts : rawPosts.filter(p => !p.is_hidden);
+            document.getElementById('author-post-count').innerText = `📝 ${posts.length} مطلب`;
+
+            if (posts.length === 0) {
+                container.innerText = 'هیچ مطلب عمومی از این نویسنده برای نمایش وجود ندارد.';
+                document.getElementById('author-like-count').innerText = `❤️ 0 لایک دریافت شده`;
                 return;
             }
 
@@ -114,21 +140,16 @@
             let commentCounts = {};
             if (commentsData) commentsData.forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
 
-            // آپدیت هدر پروفایل با اطلاعات اولین پست
-            document.getElementById('author-name').innerText = posts[0].author_name || 'ناشناس';
-            document.getElementById('author-avatar').src = posts[0].avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${posts[0].author_name}`;
-            document.getElementById('author-post-count').innerText = `📝 ${posts.length} مطلب`;
-            document.getElementById('profile-card').style.display = 'block';
-
             posts.forEach((post, index) => {
                 totalLikes += (post.likes || 0);
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
                 const categoryBadge = post.category ? `<div class="category-badge">${escapeHtml(post.category)}</div>` : '';
+                const hiddenBadge = post.is_hidden ? `<div class="hidden-badge">👁️‍🗨️ مخفی شده (فقط دید ادمین)</div>` : '';
                 
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
                 let firstImg = tempDiv.querySelector('img');
-                let coverHtml = firstImg ? `<img src="${firstImg.src}" class="post-cover" alt="کاور">` : '';
+                let coverHtml = firstImg ? `<img src="${firstImg.src}" class="post-cover" alt="کاور" loading="lazy">` : '';
 
                 let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
                 let excerpt = textContent.substring(0, 150) + '...';
@@ -137,7 +158,7 @@
                 const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
                 container.innerHTML += `
-                    <div class="post-card" style="animation-delay: ${index * 0.05}s; text-align: right;">
+                    <div class="post-card ${post.is_hidden ? 'hidden-post' : ''}" style="animation-delay: ${index * 0.05}s; text-align: right;">
                         ${coverHtml}
                         <div class="post-card-body" onclick="window.location.href='post.html?id=${post.id}'">
                             <div class="post-meta">
@@ -149,9 +170,9 @@
                                     <span class="stat-item">${iconComment} ${commentCounts[post.id] || 0}</span>
                                 </div>
                             </div>
-                            ${categoryBadge}
+                            ${hiddenBadge}${categoryBadge}
                             <h2 class="post-title">${escapeHtml(post.title)}</h2>
-                            <div class="post-excerpt">${excerpt}</div>
+                            <div class="post-excerpt">${escapeHtml(excerpt)}</div>
                         </div>
                     </div>
                 `;
