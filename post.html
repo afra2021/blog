@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>خواندن مطلب - Real Blog</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -128,7 +129,6 @@
         <div id="admin-panel" class="admin-controls">
             <span style="color: var(--accent-color); font-weight: bold;">پنل مدیریت مطلب</span>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <!-- دکمه مخفی‌سازی ویژه ادمین کل -->
                 <button id="toggle-hide-btn" class="btn-action btn-hide" style="display:none;" onclick="toggleHidePost()">
                     👁️‍🗨️ مخفی کردن
                 </button>
@@ -223,7 +223,6 @@
         const _supabase = window.supabase.createClient('https://zvajqmlqulgyqlffjbze.supabase.co', 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO');
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id');
-        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
         
         let currentUser = null; let currentUsername = ''; let currentAvatar = '';
         let isAdmin = false; 
@@ -244,13 +243,13 @@
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
                 currentUser = session.user;
-                currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username;
-                if(!currentUsername) currentUsername = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'مدیر سایت' : currentUser.email.split('@')[0];
+                if (currentUser.user_metadata?.is_admin === true) isAdmin = true;
+                
+                currentUsername = currentUser.user_metadata?.display_name || currentUser.user_metadata?.username || 'کاربر';
                 currentAvatar = currentUser.user_metadata?.avatar_url || '';
                 
                 document.getElementById('comment-form').style.display = 'flex';
                 document.getElementById('login-msg').style.display = 'none';
-                if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) isAdmin = true;
             }
 
             await loadPost();
@@ -265,7 +264,6 @@
                 return showToast('مطلب یافت نشد یا پاک شده است', true);
             }
 
-            // قفل دسترسی برای پست‌های مخفی
             isPostHidden = Boolean(data.is_hidden);
             if (isPostHidden && !isAdmin) {
                 document.getElementById('p-title').innerText = '🔒 این مطلب توسط مدیر سایت به صورت موقت مخفی شده است.';
