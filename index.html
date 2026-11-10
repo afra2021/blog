@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Real Blog</title>
-    
-    <!-- لوگوی حرف R در تب مرورگر -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e1e1e'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-weight='900' font-size='20' fill='%2300adb5'%3ER%3C/text%3E%3C/svg%3E">
-
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -212,7 +209,6 @@
         }
         setInterval(updateClock, 1000); updateClock();
 
-        const themeBtn = document.getElementById('theme-btn');
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -227,7 +223,6 @@
         const supabaseUrl = 'https://zvajqmlqulgyqlffjbze.supabase.co';
         const supabaseKey = 'sb_publishable_KGX0MtqTo2_1AzqKens_iQ_0MUN7ojO';
         const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        const ADMIN_EMAIL = 'behnamafra1387@gmail.com';
 
         const iconHeart = `<svg class="icon icon-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
         const iconEye = `<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
@@ -247,12 +242,13 @@
             isAdmin = false;
 
             if (session) {
-                if (session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                // تشخیص امن ادمین از طریق متادیتای سرور بدون لو رفتن ایمیل در کد
+                if (session.user.user_metadata?.is_admin === true) {
                     isAdmin = true;
                 }
-                let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username || session.user.email.split('@')[0];
+                let name = session.user.user_metadata?.display_name || session.user.user_metadata?.username || 'کاربر';
                 let avatar = session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
-                authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${name}</span></div>`;
+                authDiv.innerHTML = `<div class="auth-box"><img src="${avatar}" class="auth-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${name}'"> <span>${escapeHtml(name)}</span></div>`;
             }
 
             await fetchAndLoadPosts();
@@ -343,7 +339,7 @@
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = post.content;
                 let firstImg = tempDiv.querySelector('img');
-                let coverHtml = firstImg ? `<img src="${firstImg.src}" class="post-cover" alt="کاور مطلب">` : '';
+                let coverHtml = firstImg ? `<img src="${firstImg.src}" class="post-cover" alt="کاور مطلب" loading="lazy">` : '';
 
                 let textContent = tempDiv.innerText.replace(/\s+/g, ' ').trim();
                 let excerpt = textContent.substring(0, 150) + '...';
@@ -356,7 +352,7 @@
                         ${coverHtml}
                         <div class="post-card-body" onclick="window.location.href='post.html?id=${post.id}'">
                             <div class="post-meta">
-                                <a href="author.html?id=${post.user_id}" class="author-info">
+                                <a href="author.html?id=${post.user_id}" class="author-info" onclick="event.stopPropagation()">
                                     <img src="${avatarUrl}" class="post-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> 
                                     ${escapeHtml(author)}
                                 </a>
@@ -370,7 +366,7 @@
                             </div>
                             ${hiddenBadge}${categoryBadge}
                             <h2 class="post-title">${escapeHtml(post.title)}</h2>
-                            <div class="post-excerpt">${excerpt}</div>
+                            <div class="post-excerpt">${escapeHtml(excerpt)}</div>
                         </div>
                     </div>
                 `;
@@ -396,7 +392,7 @@
                 let firstImg = tempDiv.querySelector('img');
                 
                 let coverHtml = firstImg 
-                    ? `<img src="${firstImg.src}" class="popular-thumb" alt="کاور">`
+                    ? `<img src="${firstImg.src}" class="popular-thumb" alt="کاور" loading="lazy">`
                     : `<div class="popular-thumb" style="display:flex; justify-content:center; align-items:center; color:#555; background:rgba(0,173,181,0.1); border-color:rgba(0,173,181,0.2);">📝</div>`;
                 
                 sideContainer.innerHTML += `
