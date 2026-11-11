@@ -111,6 +111,7 @@
 
             const { data: rawPosts, error } = await _supabase.from('posts').select('*').eq('user_id', authorId).order('created_at', { ascending: false });
             const { data: commentsData } = await _supabase.from('comments').select('post_id');
+            const { data: engagement } = await _supabase.from('post_engagement').select('post_id, likes, views');
             
             if (error || !rawPosts || rawPosts.length === 0) {
                 container.innerText = 'هیچ مطلبی از این نویسنده یافت نشد.';
@@ -126,7 +127,13 @@
             document.getElementById('profile-card').style.display = 'block';
 
             // فیلتر کردن پست‌های مخفی برای کاربران عادی
-            const posts = isAdmin ? rawPosts : rawPosts.filter(p => !p.is_hidden);
+            const engagementByPost = new Map((engagement || []).map(item => [String(item.post_id), item]));
+            const postsWithEngagement = rawPosts.map(post => ({
+                ...post,
+                likes: engagementByPost.get(String(post.id))?.likes ?? post.likes ?? 0,
+                views: engagementByPost.get(String(post.id))?.views ?? post.views ?? 0
+            }));
+            const posts = isAdmin ? postsWithEngagement : postsWithEngagement.filter(p => !p.is_hidden);
             document.getElementById('author-post-count').innerText = `📝 ${posts.length} مطلب`;
 
             if (posts.length === 0) {
