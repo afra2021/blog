@@ -228,8 +228,7 @@
         let isAdmin = false; 
         let isPostHidden = false;
         
-        let currentLikes = 0; let hasLiked = false;
-        let likedUsersArray = []; let viewedUsersArray = [];
+        let currentLikes = 0; let currentViews = 0; let hasLiked = false;
 
         const iconClock = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const iconEye = `<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
@@ -292,6 +291,32 @@
             return template.innerHTML;
         }
 
+
+        async function loadEngagement() {
+            if (currentUser) {
+                const { data: ownLikes } = await _supabase
+                    .from('post_likes')
+                    .select('post_id')
+                    .eq('post_id', postId)
+                    .maybeSingle();
+                hasLiked = Boolean(ownLikes);
+
+                await _supabase.from('post_views').upsert(
+                    { post_id: postId, user_id: currentUser.id },
+                    { onConflict: 'post_id,user_id', ignoreDuplicates: true }
+                );
+            }
+
+            const { data: stats } = await _supabase
+                .from('post_reaction_counts')
+                .select('likes, views')
+                .eq('post_id', postId)
+                .maybeSingle();
+
+            currentLikes = Number(stats?.likes || 0);
+            currentViews = Number(stats?.views || 0);
+        }
+
         async function loadPost() {
             const { data, error } = await _supabase.from('posts').select('*').eq('id', postId).single();
             if (error || !data) {
@@ -309,21 +334,10 @@
 
             updateHideUI();
 
-            viewedUsersArray = (data.viewed_users && data.viewed_users.trim() !== '') ? data.viewed_users.split(',') : [];
-            likedUsersArray = (data.liked_users && data.liked_users.trim() !== '') ? data.liked_users.split(',') : [];
-            let newViews = data.views || 0;
-
-            if (currentUser && !viewedUsersArray.includes(currentUser.id)) {
-                viewedUsersArray.push(currentUser.id);
-                newViews++;
-                await _supabase.from('posts').update({ views: newViews, viewed_users: viewedUsersArray.join(',') }).eq('id', postId);
-            }
+            await loadEngagement();
 
             const author = data.author_name || 'ناشناس';
             const avatarUrl = data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${author}`;
-            
-            currentLikes = data.likes || 0;
-            hasLiked = currentUser && likedUsersArray.includes(currentUser.id);
 
             document.getElementById('p-title').innerText = data.title;
             document.getElementById('sticky-title').innerText = data.title;
@@ -340,7 +354,7 @@
             const readTimeDisplay = readTime <= 1 ? 'کمتر از ۱ دقیقه' : `${readTime} دقیقه`;
 
             document.getElementById('p-readtime').innerHTML = `${iconClock} ${readTimeDisplay}`;
-            document.getElementById('p-views').innerHTML = `${iconEye} ${newViews}`;
+            document.getElementById('p-views').innerHTML = `${iconEye} ${currentViews}`;
             document.getElementById('p-content').innerHTML = sanitizeRichHtml(data.content);
             
             updateLikeUI();
@@ -396,27 +410,19 @@
         async function toggleLike() {
             if (!currentUser) return showToast('برای لایک کردن باید وارد سایت شوید.', true);
 
-            if (hasLiked) { 
-                currentLikes--; 
-                likedUsersArray = likedUsersArray.filter(id => id !== currentUser.id);
-                hasLiked = false; 
-            } else { 
-                currentLikes++; 
-                likedUsersArray.push(currentUser.id);
-                hasLiked = true; 
+            const request = hasLiked
+                ? _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id)
+                : _supabase.from('post_likes').insert([{ post_id: postId, user_id: currentUser.id }]);
+
+            const { error } = await request;
+            if (error) {
+                showToast('ثبت لایک انجام نشد. لطفاً دوباره تلاش کنید.', true);
+                return;
             }
+
+            hasLiked = !hasLiked;
+            currentLikes += hasLiked ? 1 : -1;
             updateLikeUI();
-            
-            const { error: likeError } = await _supabase.from('posts').update({ 
-                likes: currentLikes, liked_users: likedUsersArray.join(',')
-            }).eq('id', postId);
-            
-            if (likeError) {
-                if (hasLiked) { currentLikes--; hasLiked = false; likedUsersArray.pop(); } 
-                else { currentLikes++; hasLiked = true; likedUsersArray.push(currentUser.id); }
-                updateLikeUI();
-                showToast('خطا در ارتباط با سرور', true);
-            }
         }
 
         async function loadComments() {
