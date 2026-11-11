@@ -257,14 +257,22 @@
         async function fetchAndLoadPosts() {
             const { data: posts, error } = await _supabase.from('posts').select('*').order('created_at', { ascending: false });
             const { data: comments } = await _supabase.from('comments').select('post_id');
+            const { data: engagement } = await _supabase.from('post_engagement').select('post_id, likes, views');
             
             if (error || !posts) {
                 document.getElementById('loading').innerText = 'خطا در دریافت مطالب.';
                 showToast('خطا در ارتباط با سرور', true);
                 return;
             }
+
+            const engagementByPost = new Map((engagement || []).map(item => [String(item.post_id), item]));
+            const postsWithEngagement = posts.map(post => ({
+                ...post,
+                likes: engagementByPost.get(String(post.id))?.likes ?? post.likes ?? 0,
+                views: engagementByPost.get(String(post.id))?.views ?? post.views ?? 0
+            }));
             
-            allPostsData = isAdmin ? posts : posts.filter(p => !p.is_hidden);
+            allPostsData = isAdmin ? postsWithEngagement : postsWithEngagement.filter(p => !p.is_hidden);
             allCommentsData = comments || [];
             document.getElementById('loading').style.display = 'none';
             
