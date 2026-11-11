@@ -308,7 +308,7 @@
             }
 
             const { data: stats } = await _supabase
-                .from('post_reaction_counts')
+                .from('post_engagement')
                 .select('likes, views')
                 .eq('post_id', postId)
                 .maybeSingle();
