@@ -341,6 +341,7 @@
 
             document.getElementById('p-title').innerText = data.title;
             document.getElementById('sticky-title').innerText = data.title;
+            document.title = `${data.title} | Real Blog`;
             
             const authorHTML = `<img src="${avatarUrl}" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${author}'"> ${escapeHtml(author)}`;
             document.getElementById('p-author').innerHTML = authorHTML;
