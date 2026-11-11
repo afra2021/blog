@@ -74,6 +74,10 @@
         .modal-overlay.show .modal-box { transform: scale(1); }
         .modal-msg { margin: 0 0 20px 0; font-size: 1.1rem; line-height: 1.6; }
         .modal-actions { display: flex; justify-content: center; gap: 10px; }
+        .preview-box { max-width: 850px; max-height: 86vh; overflow: auto; text-align: right; }
+        .preview-content { line-height: 2; word-break: break-word; }
+        .preview-content img { max-width: 100%; height: auto; border-radius: 8px; }
+        .draft-status { color: #888; font-size: 0.82rem; margin: 8px 0 14px; min-height: 1.4em; }
 
         @media (max-width: 768px) {
             header { padding: 12px 15px; flex-direction: column; align-items: stretch; }
@@ -92,6 +96,13 @@
                 <button id="modal-yes" class="btn-small btn-delete">بله، مطمئنم</button>
                 <button id="modal-no" class="btn-small" style="background:#555;">لغو</button>
             </div>
+        </div>
+    </div>
+    <div id="preview-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+        <div class="modal-box preview-box">
+            <h2 id="preview-title">پیش‌نمایش مطلب</h2>
+            <div id="preview-body" class="preview-content"></div>
+            <div class="modal-actions"><button class="btn-small" style="background:#555;" onclick="closePreview()">بازگشت به ویرایش</button></div>
         </div>
     </div>
     <div id="toast-container"></div>
@@ -115,9 +126,9 @@
         <div class="editor-section">
             <h3 id="editor-title">نوشتن مطلب جدید</h3>
             
-            <input type="text" id="post-title" placeholder="عنوان مطلب را اینجا بنویسید...">
+            <input type="text" id="post-title" placeholder="عنوان مطلب را اینجا بنویسید..." maxlength="120" aria-label="عنوان مطلب">
             
-            <input type="text" id="post-category" list="categories" placeholder="دسته‌بندی (انتخاب کنید یا تایپ کنید)">
+            <input type="text" id="post-category" list="categories" placeholder="دسته‌بندی (انتخاب کنید یا تایپ کنید)" maxlength="40" aria-label="دسته‌بندی مطلب">
             <datalist id="categories">
                 <option value="تکنولوژی">
                 <option value="روزمره">
@@ -127,21 +138,24 @@
             </datalist>
             
             <div class="toolbar">
-                <button type="button" onclick="formatText('bold')" title="ضخیم"><b>B</b></button>
-                <button type="button" onclick="formatText('italic')" title="کج"><i>I</i></button>
-                <button type="button" onclick="formatText('underline')" title="زیرخط"><u>U</u></button>
-                <button type="button" onclick="formatText('formatBlock', 'H2')" title="تیتر بزرگ">تیتر بزرگ</button>
-                <button type="button" onclick="insertLink()" title="افزودن لینک">🔗 لینک</button>
+                <button type="button" onclick="formatText('bold')" title="ضخیم" aria-label="ضخیم"><b>B</b></button>
+                <button type="button" onclick="formatText('italic')" title="کج" aria-label="کج"><i>I</i></button>
+                <button type="button" onclick="formatText('underline')" title="زیرخط" aria-label="زیرخط"><u>U</u></button>
+                <button type="button" onclick="formatText('formatBlock', 'H2')" title="تیتر بزرگ" aria-label="تیتر بزرگ">تیتر بزرگ</button>
+                <button type="button" onclick="insertLink()" title="افزودن لینک" aria-label="افزودن لینک">🔗 لینک</button>
                 
-                <label for="post-inline-image" title="افزودن عکس در متن (بهینه سازی خودکار حجم)" style="margin-right: auto;">
+                <label for="post-inline-image" title="افزودن عکس در متن (بهینه سازی خودکار حجم)" aria-label="افزودن عکس در متن (بهینه سازی خودکار حجم)" style="margin-right: auto;">
                     📷 افزودن عکس
                 </label>
                 <input type="file" id="post-inline-image" accept="image/*" onchange="uploadImageToEditor(this)">
             </div>
             
-            <div id="post-content" class="rich-editor" contenteditable="true"></div>
-
-            <button class="btn-primary" onclick="savePost()" id="submit-btn">انتشار مطلب</button>
+            <div id="post-content" class="rich-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="متن مطلب"></div>
+            <div id="draft-status" class="draft-status" aria-live="polite"></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-primary" type="button" onclick="previewPost()" style="background:#555; flex:1;">پیش‌نمایش</button>
+                <button class="btn-primary" type="button" onclick="savePost()" id="submit-btn" style="flex:2;">انتشار مطلب</button>
+            </div>
         </div>
 
         <div class="sidebar-section">
@@ -246,6 +260,64 @@
         let isAdmin = false;
         let editingPostId = null;
         let uploadedAvatarUrl = '';
+
+
+        function getDraftKey() {
+            return currentUser ? `real-blog-draft-${currentUser.id}` : 'real-blog-draft';
+        }
+
+        function saveDraft() {
+            if (editingPostId) return;
+            const draft = {
+                title: document.getElementById('post-title').value,
+                category: document.getElementById('post-category').value,
+                content: document.getElementById('post-content').innerHTML,
+                savedAt: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
+            };
+            if (!draft.title && !draft.category && !draft.content.replace(/<br\s*\/?>(\s*)/gi, '').trim()) return;
+            localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+            document.getElementById('draft-status').innerText = `پیش‌نویس روی همین دستگاه ذخیره شد — ${draft.savedAt}`;
+        }
+
+        function restoreDraft() {
+            const raw = localStorage.getItem(getDraftKey());
+            if (!raw) return;
+            try {
+                const draft = JSON.parse(raw);
+                document.getElementById('post-title').value = draft.title || '';
+                document.getElementById('post-category').value = draft.category || '';
+                document.getElementById('post-content').innerHTML = sanitizeRichHtml(draft.content || '');
+                document.getElementById('draft-status').innerText = 'پیش‌نویس قبلی بازیابی شد.';
+            } catch { localStorage.removeItem(getDraftKey()); }
+        }
+
+        function clearDraft() {
+            localStorage.removeItem(getDraftKey());
+            const status = document.getElementById('draft-status');
+            if (status) status.innerText = '';
+        }
+
+        function startDraftAutosave() {
+            if (editingPostId) return;
+            ['post-title', 'post-category', 'post-content'].forEach((id) => {
+                document.getElementById(id).addEventListener('input', () => {
+                    clearTimeout(window.draftSaveTimer);
+                    window.draftSaveTimer = setTimeout(saveDraft, 800);
+                });
+            });
+            window.addEventListener('beforeunload', saveDraft);
+        }
+
+        function previewPost() {
+            const title = document.getElementById('post-title').value.trim() || 'بدون عنوان';
+            const content = sanitizeRichHtml(document.getElementById('post-content').innerHTML.trim()) || '<p>متن مطلب هنوز نوشته نشده است.</p>';
+            document.getElementById('preview-body').innerHTML = `<h1 style="color:var(--accent-color); line-height:1.6;">${escapeHtml(title)}</h1>${content}`;
+            document.getElementById('preview-modal').classList.add('show');
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').classList.remove('show');
+        }
 
         async function checkAuth() {
             const { data: { session } } = await _supabase.auth.getSession();
@@ -373,7 +445,7 @@
             posts.forEach(post => {
                 const date = new Date(post.created_at).toLocaleDateString('fa-IR');
                 const hiddenStatus = post.is_hidden ? '<span style="color:#ff4c4c; font-weight:bold;">(مخفی)</span>' : '';
-                const hideBtn = isAdmin ? `<button class="btn-small btn-hide" style="background:${post.is_hidden ? '#2ecc71' : '#f39c12'};" onclick="toggleHideFromList('${post.id}', ${Boolean(post.is_hidden)})" title="${post.is_hidden ? 'نمایش عمومی' : 'مخفی کردن'}">${post.is_hidden ? '👁️' : '👁️‍🗨️'}</button>` : '';
+                const hideBtn = isAdmin ? `<button class="btn-small btn-hide" style="background:${post.is_hidden ? '#2ecc71' : '#f39c12'};" onclick="toggleHideFromList('${post.id}', ${Boolean(post.is_hidden)})" title="${post.is_hidden ? 'نمایش عمومی' : 'مخفی کردن'}" aria-label="${post.is_hidden ? 'نمایش عمومی' : 'مخفی کردن'}">${post.is_hidden ? '👁️' : '👁️‍🗨️'}</button>` : '';
 
                 listDiv.innerHTML += `
                     <div class="post-item ${post.is_hidden ? 'is-hidden' : ''}">
@@ -383,8 +455,8 @@
                         </div>
                         <div class="post-item-actions">
                             ${hideBtn}
-                            <button class="btn-small btn-edit" onclick="window.location.href='admin.html?edit=${post.id}'" title="ویرایش">✏️</button>
-                            <button class="btn-small btn-delete" onclick="deletePost('${post.id}')" title="حذف">🗑️</button>
+                            <button class="btn-small btn-edit" onclick="window.location.href='admin.html?edit=${post.id}'" title="ویرایش" aria-label="ویرایش">✏️</button>
+                            <button class="btn-small btn-delete" onclick="deletePost('${post.id}')" title="حذف" aria-label="حذف">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -409,7 +481,10 @@
                 document.getElementById('editor-title').innerText = '✏️ ویرایش مطلب';
                 document.getElementById('submit-btn').innerText = 'ذخیره تغییرات';
                 loadPostForEdit(editingPostId);
+            } else {
+                restoreDraft();
             }
+            startDraftAutosave();
         }
 
         async function loadPostForEdit(id) {
@@ -465,7 +540,11 @@
             const content = sanitizeRichHtml(document.getElementById('post-content').innerHTML.trim());
             const btn = document.getElementById('submit-btn');
 
-            if (!title || !content || content === '<br>') return showToast('لطفاً عنوان و متن مطلب را وارد کنید.', true);
+            const plainText = content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+            if (title.length < 3) return showToast('عنوان باید دست‌کم ۳ حرف داشته باشد.', true);
+            if (category.length > 40) return showToast('دسته‌بندی نباید بیشتر از ۴۰ حرف باشد.', true);
+            if (plainText.length < 20) return showToast('متن مطلب باید دست‌کم ۲۰ حرف داشته باشد.', true);
+            if (plainText.length > 30000) return showToast('متن مطلب خیلی طولانی است؛ آن را کوتاه‌تر کنید.', true);
 
             btn.disabled = true; btn.innerText = 'در حال ذخیره...';
 
@@ -491,6 +570,7 @@
                 showToast('خطا در ذخیره مطلب: ' + error.message, true);
                 btn.disabled = false; btn.innerText = editingPostId ? 'ذخیره تغییرات' : 'انتشار مطلب';
             } else {
+                clearDraft();
                 showToast(editingPostId ? 'تغییرات با موفقیت ذخیره شد!' : 'مطلب شما منتشر شد!');
                 setTimeout(() => window.location.href = 'index.html', 1500);
             }
@@ -515,6 +595,7 @@
         
         function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
 
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePreview(); });
         checkAuth();
     </script>
 </body>
