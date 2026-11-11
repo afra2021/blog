@@ -169,9 +169,9 @@
 
     <footer>
         <div class="footer-links">
-            <a href="#">درباره ما</a>
-            <a href="#">تماس با ما</a>
-            <a href="#">حریم خصوصی و قوانین</a>
+            <a href="about.html">درباره ما</a>
+            <a href="contact.html">تماس با ما</a>
+            <a href="privacy.html">حریم خصوصی و قوانین</a>
         </div>
         <p>© 2026 پلتفرم وبلاگ‌نویسی Real Blog. تمامی حقوق محفوظ است.</p>
     </footer>
@@ -264,8 +264,11 @@
             const { data: engagement } = await _supabase.from('post_engagement').select('post_id, likes, views');
             
             if (error || !posts) {
-                document.getElementById('loading').innerText = 'خطا در دریافت مطالب.';
-                showToast('خطا در ارتباط با سرور', true);
+                const isNetworkError = error?.message?.toLowerCase().includes('fetch');
+                document.getElementById('loading').innerText = isNetworkError
+                    ? 'اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.'
+                    : 'مطالب فعلاً قابل دریافت نیستند. کمی بعد دوباره تلاش کنید.';
+                showToast(isNetworkError ? 'ارتباط با اینترنت برقرار نیست.' : 'دریافت مطالب با مشکل روبه‌رو شد.', true);
                 return;
             }
 
