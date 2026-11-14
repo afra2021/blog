@@ -305,14 +305,21 @@
         }
 
         async function loadEngagement() {
+            hasLiked = false;
+
             if (currentUser) {
-                const { data: ownLikes } = await _supabase
+                const { data: ownLikes, error: ownLikesError } = await _supabase
                     .from('post_likes')
                     .select('post_id')
                     .eq('post_id', postId)
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-                if (ownLikes) hasLiked = Boolean(ownLikes);
+
+                if (ownLikesError) {
+                    console.error('خطا در بررسی وضعیت لایک کاربر:', ownLikesError);
+                } else {
+                    hasLiked = Boolean(ownLikes);
+                }
 
                 await _supabase.from('post_views').upsert(
                     { post_id: postId, user_id: currentUser.id },
