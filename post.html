@@ -229,7 +229,7 @@
         let isAdmin = false; 
         let isPostHidden = false;
         
-        let currentLikes = 0; let currentViews = 0; let hasLiked = false;
+        let currentLikes = 0; let currentViews = 0; let hasLiked = false; let isLikeUpdating = false;
 
         const iconClock = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const iconEye = `<svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
@@ -260,17 +260,22 @@
         function sanitizeRichHtml(html) {
             const template = document.createElement('template');
             template.innerHTML = html || '';
-            const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'A', 'IMG', 'BLOCKQUOTE']);
+            const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'A', 'IMG', 'BLOCKQUOTE', 'FIGURE', 'FIGCAPTION']);
             const safeUrl = (value) => {
                 try {
                     const url = new URL(value, window.location.origin);
                     return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
                 } catch { return ''; }
             };
-            template.content.querySelectorAll('*').forEach((element) => {
+            const safeImageSrc = (value) => {
+                const source = String(value || '').trim();
+                if (/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(source) && source.length <= 5 * 1024 * 1024) return source;
+                return safeUrl(source);
+            };
+            [...template.content.querySelectorAll('*')].forEach((element) => {
                 const original = Object.fromEntries([...element.attributes].map((attribute) => [attribute.name, attribute.value]));
                 if (!allowedTags.has(element.tagName)) {
-                    element.replaceWith(document.createTextNode(element.textContent || ''));
+                    element.replaceWith(...element.childNodes);
                     return;
                 }
                 [...element.attributes].forEach((attribute) => element.removeAttribute(attribute.name));
@@ -280,27 +285,41 @@
                         element.setAttribute('href', href);
                         element.setAttribute('target', '_blank');
                         element.setAttribute('rel', 'noopener noreferrer');
+                    } else {
+                        element.removeAttribute('href');
                     }
                 }
                 if (element.tagName === 'IMG') {
-                    const src = safeUrl(original.src || '');
-                    if (src) element.setAttribute('src', src);
-                    else element.remove();
+                    const src = safeImageSrc(original.src || '');
+                    if (src) {
+                        element.setAttribute('src', src);
+                        element.setAttribute('loading', 'lazy');
+                        element.setAttribute('decoding', 'async');
+                    } else {
+                        element.remove();
+                    }
                     if (original.alt) element.setAttribute('alt', original.alt.slice(0, 200));
                 }
             });
             return template.innerHTML;
         }
 
-
         async function loadEngagement() {
+            hasLiked = false;
+
             if (currentUser) {
-                const { data: ownLikes } = await _supabase
+                const { data: ownLikes, error: ownLikesError } = await _supabase
                     .from('post_likes')
                     .select('post_id')
                     .eq('post_id', postId)
+                    .eq('user_id', currentUser.id)
                     .maybeSingle();
-                hasLiked = Boolean(ownLikes);
+
+                if (ownLikesError) {
+                    console.error('خطا در بررسی وضعیت لایک کاربر:', ownLikesError);
+                } else {
+                    hasLiked = Boolean(ownLikes);
+                }
 
                 await _supabase.from('post_views').upsert(
                     { post_id: postId, user_id: currentUser.id },
@@ -411,20 +430,35 @@
 
         async function toggleLike() {
             if (!currentUser) return showToast('برای لایک کردن باید وارد سایت شوید.', true);
+            if (isLikeUpdating) return;
+            isLikeUpdating = true;
+            const buttons = [document.getElementById('like-btn'), document.getElementById('sticky-like-btn')].filter(Boolean);
+            buttons.forEach((button) => button.disabled = true);
 
-            const request = hasLiked
-                ? _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id)
-                : _supabase.from('post_likes').insert([{ post_id: postId, user_id: currentUser.id }]);
+            try {
+                const request = hasLiked
+                    ? _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id)
+                    : _supabase.from('post_likes').insert([{ post_id: postId, user_id: currentUser.id }]);
 
-            const { error } = await request;
-            if (error) {
-                showToast('ثبت لایک انجام نشد. لطفاً دوباره تلاش کنید.', true);
-                return;
+                const { error } = await request;
+                if (error) {
+                    if (error.code === '23505') {
+                        hasLiked = true;
+                        await loadEngagement();
+                        updateLikeUI();
+                    } else {
+                        showToast('ثبت لایک انجام نشد. لطفاً دوباره تلاش کنید.', true);
+                    }
+                    return;
+                }
+
+                hasLiked = !hasLiked;
+                currentLikes = Math.max(0, currentLikes + (hasLiked ? 1 : -1));
+                updateLikeUI();
+            } finally {
+                isLikeUpdating = false;
+                buttons.forEach((button) => button.disabled = false);
             }
-
-            hasLiked = !hasLiked;
-            currentLikes += hasLiked ? 1 : -1;
-            updateLikeUI();
         }
 
         async function loadComments() {

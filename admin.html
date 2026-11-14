@@ -502,17 +502,22 @@
         function sanitizeRichHtml(html) {
             const template = document.createElement('template');
             template.innerHTML = html || '';
-            const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'A', 'IMG', 'BLOCKQUOTE']);
+            const allowedTags = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'A', 'IMG', 'BLOCKQUOTE', 'FIGURE', 'FIGCAPTION']);
             const safeUrl = (value) => {
                 try {
                     const url = new URL(value, window.location.origin);
                     return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
                 } catch { return ''; }
             };
-            template.content.querySelectorAll('*').forEach((element) => {
+            const safeImageSrc = (value) => {
+                const source = String(value || '').trim();
+                if (/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(source) && source.length <= 5 * 1024 * 1024) return source;
+                return safeUrl(source);
+            };
+            [...template.content.querySelectorAll('*')].forEach((element) => {
                 const original = Object.fromEntries([...element.attributes].map((attribute) => [attribute.name, attribute.value]));
                 if (!allowedTags.has(element.tagName)) {
-                    element.replaceWith(document.createTextNode(element.textContent || ''));
+                    element.replaceWith(...element.childNodes);
                     return;
                 }
                 [...element.attributes].forEach((attribute) => element.removeAttribute(attribute.name));
@@ -522,12 +527,19 @@
                         element.setAttribute('href', href);
                         element.setAttribute('target', '_blank');
                         element.setAttribute('rel', 'noopener noreferrer');
+                    } else {
+                        element.removeAttribute('href');
                     }
                 }
                 if (element.tagName === 'IMG') {
-                    const src = safeUrl(original.src || '');
-                    if (src) element.setAttribute('src', src);
-                    else element.remove();
+                    const src = safeImageSrc(original.src || '');
+                    if (src) {
+                        element.setAttribute('src', src);
+                        element.setAttribute('loading', 'lazy');
+                        element.setAttribute('decoding', 'async');
+                    } else {
+                        element.remove();
+                    }
                     if (original.alt) element.setAttribute('alt', original.alt.slice(0, 200));
                 }
             });
